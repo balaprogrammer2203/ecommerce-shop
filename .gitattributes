@@ -1,0 +1,4 @@
+# Enforce LF in the repository / working tree for text files.
+# This prevents Git autocrlf warnings on `git add`/`git checkout`.
+* text=auto eol=lf
+

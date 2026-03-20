@@ -1,0 +1,37 @@
+# Dependencies
+node_modules/
+
+# Build output (if any tooling generates it)
+dist/
+build/
+
+# Runtime artifacts / uploads (common for Express apps)
+uploads/
+logs/
+.cache/
+tmp/
+temp/
+
+# Editor folders
+.vscode/
+.idea/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# Test coverage
+coverage/
+
+# Local environment variables (keep the example file)
+.env
+.env.*
+!.env.example
+
+# OS junk
+.DS_Store
+Thumbs.db
+
