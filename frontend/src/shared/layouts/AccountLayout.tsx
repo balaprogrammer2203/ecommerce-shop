@@ -1,7 +1,7 @@
 import { Box, Container, Stack, Typography } from '@mui/material';
 import { Outlet } from 'react-router-dom';
 
-import { Header } from '../components/Header';
+import { Header } from '../ui/Header';
 
 export const AccountLayout = () => {
   return (

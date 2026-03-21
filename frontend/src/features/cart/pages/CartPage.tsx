@@ -6,7 +6,7 @@ import {
   useMyCartQuery,
   useRemoveCartItemMutation,
   useUpdateCartItemQtyMutation,
-} from '../features/cart/api/cartApi';
+} from '../api/cartApi';
 
 export const CartPage = () => {
   const { data, isLoading, isError, error } = useMyCartQuery();

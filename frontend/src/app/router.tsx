@@ -1,17 +1,21 @@
 import { createBrowserRouter } from 'react-router-dom';
 
+import { AdminDashboardPage } from '../features/admin/pages/AdminDashboardPage';
 import { AuthGuard } from '../features/auth/components/AuthGuard';
-import { AccountLayout } from '../layouts/AccountLayout';
-import { AdminLayout } from '../layouts/AdminLayout';
-import { PublicLayout } from '../layouts/PublicLayout';
-import { AdminDashboardPage } from '../pages/AdminDashboardPage';
-import { CartPage } from '../pages/CartPage';
-import { CheckoutPage } from '../pages/CheckoutPage';
-import { HomePage } from '../pages/HomePage';
-import { LoginPage } from '../pages/LoginPage';
-import { OrdersPage } from '../pages/OrdersPage';
-import { ProductPage } from '../pages/ProductPage';
+import { LoginPage } from '../features/auth/pages/LoginPage';
+import { CartPage } from '../features/cart/pages/CartPage';
+import { HomePage } from '../features/catalog/pages/HomePage';
+import { ProductPage } from '../features/catalog/pages/ProductPage';
+import { CheckoutPage } from '../features/checkout/pages/CheckoutPage';
+import { OrdersPage } from '../features/orders/pages/OrdersPage';
+import { AccountLayout } from '../shared/layouts/AccountLayout';
+import { AdminLayout } from '../shared/layouts/AdminLayout';
+import { PublicLayout } from '../shared/layouts/PublicLayout';
 
+/**
+ * Application route tree. Keep route definitions here (composition root);
+ * screens live under `features/{name}/pages` for feature-based scaling.
+ */
 export const appRouter = createBrowserRouter([
   {
     path: '/',

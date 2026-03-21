@@ -2,9 +2,9 @@ import { Alert, Button, Paper, Stack, TextField, Typography } from '@mui/materia
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
-import { useAppDispatch } from '../app/hooks';
-import { useLoginMutation } from '../features/auth/api/authApi';
-import { setCredentials } from '../features/auth/slices/authSlice';
+import { useAppDispatch } from '../../../app/hooks';
+import { useLoginMutation } from '../api/authApi';
+import { setCredentials } from '../slices/authSlice';
 
 export const LoginPage = () => {
   const dispatch = useAppDispatch();

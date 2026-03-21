@@ -1,6 +1,6 @@
 import { Alert, CircularProgress, Paper, Stack, Typography } from '@mui/material';
 
-import { useMyOrdersQuery } from '../features/orders/api/ordersApi';
+import { useMyOrdersQuery } from '../api/ordersApi';
 
 export const OrdersPage = () => {
   const { data, isLoading, isError } = useMyOrdersQuery();

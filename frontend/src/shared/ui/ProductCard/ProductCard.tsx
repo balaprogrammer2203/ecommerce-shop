@@ -1,7 +1,7 @@
 import { Card, CardActions, CardContent, CardMedia, Button, Typography } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 
-import type { Product } from '../../features/catalog/types';
+import type { Product } from '../../../features/catalog/types';
 
 type ProductCardProps = {
   product: Product;

@@ -2,12 +2,12 @@ import { Alert, Box, Button, CircularProgress, Stack, TextField, Typography } fr
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 
-import { useAddItemToCartMutation } from '../features/cart/api/cartApi';
-import { useProductDetailQuery } from '../features/catalog/api/catalogApi';
+import { useAddItemToCartMutation } from '../../cart/api/cartApi';
+import { useProductDetailQuery } from '../api/catalogApi';
 import {
   useProductReviewsQuery,
   useSubmitReviewMutation,
-} from '../features/reviews/api/reviewsApi';
+} from '../../reviews/api/reviewsApi';
 
 export const ProductPage = () => {
   const { productId } = useParams();
