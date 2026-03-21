@@ -15,7 +15,8 @@
     "express": "*",
     "jsonwebtoken": "*",
     "mongoose": "*",
-    "morgan": "*"
+    "morgan": "*",
+    "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
     "nodemon": "*"

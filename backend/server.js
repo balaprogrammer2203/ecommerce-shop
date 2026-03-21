@@ -6,6 +6,7 @@ const cookieParser = require('cookie-parser');
 
 const connectDB = require('./config/db');
 const errorHandler = require('./middleware/errorMiddleware');
+const { setupSwagger } = require('./swagger');
 
 dotenv.config();
 
@@ -15,6 +16,11 @@ const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
 const app = express();
 
 connectDB();
+
+// Enterprise-grade API documentation:
+// - Protected Swagger UI + raw OpenAPI spec.
+// - Controlled via SWAGGER_PUBLIC=true for public/local access.
+setupSwagger(app);
 
 app.use(cors({ origin: CLIENT_URL, credentials: true }));
 app.use(express.json());
