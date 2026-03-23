@@ -12,6 +12,7 @@ import { checkoutReducer } from '../features/checkout/slices/checkoutSlice';
 import { ordersApi } from '../features/orders/api/ordersApi';
 import { ordersReducer } from '../features/orders/slices/ordersSlice';
 import { reviewsApi } from '../features/reviews/api/reviewsApi';
+import { wishlistApi } from '../features/wishlist/api/wishlistApi';
 
 export const store = configureStore({
   reducer: {
@@ -26,6 +27,7 @@ export const store = configureStore({
     [catalogApi.reducerPath]: catalogApi.reducer,
     [ordersApi.reducerPath]: ordersApi.reducer,
     [reviewsApi.reducerPath]: reviewsApi.reducer,
+    [wishlistApi.reducerPath]: wishlistApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
@@ -36,6 +38,7 @@ export const store = configureStore({
       catalogApi.middleware,
       ordersApi.middleware,
       reviewsApi.middleware,
+      wishlistApi.middleware,
     ),
 });
 

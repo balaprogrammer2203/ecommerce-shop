@@ -7,11 +7,13 @@ This app follows a **feature-based** layout suited for eCommerce growth: each do
 | Folder | Role |
 |--------|------|
 | `app/` | Application shell: Redux store, typed hooks, providers, **router** (`router.tsx`). |
-| `features/` | Vertical slices: `auth`, `cart`, `catalog`, `checkout`, `orders`, `reviews`, `admin`. Each feature typically has `api/`, `slices/`, `hooks/`, `components/`, and **`pages/`** for screens tied to that domain. |
+| `features/` | Vertical slices: `auth`, `cart`, `catalog`, `checkout`, `orders`, `reviews`, `wishlist`, `admin`. Each feature typically has `api/`, `slices/`, `hooks/`, `components/`, and **`pages/`** for screens tied to that domain. |
 | `shared/` | Cross-cutting UI and utilities reused by multiple features. |
 | `shared/ui/` | Presentational / composite components (Header, ProductCard, CategoryMenu). |
+| `shared/ui/system/` | Reusable MUI-based primitives (Button, Card, Input, Modal, Loader, Badge, Select) for consistent storefront UI. |
+| `shared/ui/home/` | Homepage sections (hero, categories, featured grid, trending carousel, offers, testimonials, newsletter). |
 | `shared/layouts/` | Route layouts (public, account, admin). |
-| `shared/lib/` | Pure helpers (formatting, feature flags). |
+| `shared/lib/` | Pure helpers (formatting, feature flags, `shopCategories` for homepage tiles + `/category/:slug` browse). |
 | `config/` | Runtime config (env mapping). |
 | `services/` | Cross-feature infrastructure: RTK Query `baseQuery`, analytics, payments, legacy auth helpers. |
 | `theme/` | MUI theme tokens. |

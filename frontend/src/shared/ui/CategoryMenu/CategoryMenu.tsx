@@ -1,11 +1,13 @@
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import { Box, Button, Menu, MenuItem } from '@mui/material';
+import { Box, Button, Divider, Menu, Link as MuiLink, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 
-import { categories } from './categoryData';
+import {
+  fetchActiveCategoryTree,
+  type BackendCategoryTreeNode,
+} from '../../lib/categoryTreeClient';
 
 type MenuVariant = 'light' | 'dark';
 
@@ -18,29 +20,41 @@ export const CategoryMenu = ({ variant = 'light' }: CategoryMenuProps) => {
   const primary = theme.palette.primary.main;
 
   const [categoryAnchor, setCategoryAnchor] = useState<null | HTMLElement>(null);
-  const [subcategoryAnchor, setSubcategoryAnchor] = useState<null | HTMLElement>(null);
-  const [activeCategoryIndex, setActiveCategoryIndex] = useState<number | null>(null);
-  const [activeSubcategoryIndex, setActiveSubcategoryIndex] = useState<number | null>(null);
+  const [activeRoot, setActiveRoot] = useState<BackendCategoryTreeNode | null>(null);
+  const [tree, setTree] = useState<BackendCategoryTreeNode[] | null>(null);
 
-  const openCategoryMenu = (event: React.MouseEvent<HTMLElement>, idx: number) => {
-    setActiveCategoryIndex(idx);
-    setActiveSubcategoryIndex(null);
+  useEffect(() => {
+    let mounted = true;
+    fetchActiveCategoryTree()
+      .then((data) => {
+        if (!mounted) return;
+        setTree(data);
+      })
+      .catch(() => {
+        if (!mounted) return;
+        setTree([]);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const roots = tree ?? [];
+
+  const openCategoryMenu = (
+    event: React.MouseEvent<HTMLElement>,
+    root: BackendCategoryTreeNode,
+  ) => {
+    setActiveRoot(root);
     setCategoryAnchor(event.currentTarget);
-    setSubcategoryAnchor(null);
   };
 
   const closeAll = () => {
     setCategoryAnchor(null);
-    setSubcategoryAnchor(null);
-    setActiveCategoryIndex(null);
-    setActiveSubcategoryIndex(null);
+    setActiveRoot(null);
   };
 
-  const activeCategory = activeCategoryIndex != null ? categories[activeCategoryIndex] : null;
-  const activeSubcategory =
-    activeCategory && activeSubcategoryIndex != null
-      ? activeCategory.children[activeSubcategoryIndex]
-      : null;
+  const rootChildren = useMemo(() => activeRoot?.children ?? [], [activeRoot]);
 
   return (
     <>
@@ -60,14 +74,14 @@ export const CategoryMenu = ({ variant = 'light' }: CategoryMenuProps) => {
           '&::-webkit-scrollbar': { display: 'none' },
         }}
       >
-        {categories.map((cat, idx) => (
+        {roots.map((cat) => (
           <Button
-            key={cat.label}
+            key={cat._id}
             variant="text"
             endIcon={<KeyboardArrowDownIcon fontSize="small" />}
-            onClick={(e) => openCategoryMenu(e, idx)}
+            onClick={(e) => openCategoryMenu(e, cat)}
             aria-haspopup="menu"
-            aria-expanded={Boolean(categoryAnchor) && activeCategoryIndex === idx}
+            aria-expanded={Boolean(categoryAnchor) && activeRoot?._id === cat._id}
             sx={
               variant === 'dark'
                 ? {
@@ -94,7 +108,7 @@ export const CategoryMenu = ({ variant = 'light' }: CategoryMenuProps) => {
                   }
             }
           >
-            {cat.label}
+            {cat.name}
           </Button>
         ))}
       </Box>
@@ -108,76 +122,86 @@ export const CategoryMenu = ({ variant = 'light' }: CategoryMenuProps) => {
         MenuListProps={{ dense: true }}
         slotProps={{
           paper: {
-            sx: {
-              minWidth: 240,
-              borderRadius: 2,
-              border: '1px solid rgba(15,23,42,0.08)',
-              boxShadow: '0px 14px 40px rgba(15,23,42,0.18)',
-              mt: 1,
-            },
+            sx: { borderRadius: 2, mt: 1, overflow: 'hidden' },
           },
         }}
       >
-        {activeCategory?.children.map((sub, subIdx) => (
-          <MenuItem
-            key={sub.label}
-            onClick={(e) => {
-              setActiveSubcategoryIndex(subIdx);
-              setSubcategoryAnchor(e.currentTarget);
-            }}
-            aria-haspopup="menu"
-            sx={{
-              fontWeight: 650,
-              display: 'flex',
-              justifyContent: 'space-between',
-              gap: 2,
-              borderRadius: 1,
-              mx: 0.75,
-              '&:hover': { bgcolor: 'rgba(26,115,232,0.10)' },
-            }}
-          >
-            <Box component="span" sx={{ flex: 1 }}>
-              {sub.label}
-            </Box>
-            <ChevronRightIcon fontSize="small" />
-          </MenuItem>
-        ))}
-      </Menu>
+        <Box
+          sx={{
+            p: 2,
+            minWidth: 680,
+            maxWidth: 920,
+            bgcolor: 'background.paper',
+            border: '1px solid rgba(15,23,42,0.08)',
+            boxShadow: '0px 14px 40px rgba(15,23,42,0.18)',
+          }}
+        >
+          <Box sx={{ px: 0.5 }}>
+            <Typography variant="subtitle1" fontWeight={900} sx={{ mb: 1 }}>
+              {activeRoot?.name ?? ''}
+            </Typography>
+            <Divider sx={{ mb: 2 }} />
+          </Box>
 
-      <Menu
-        anchorEl={subcategoryAnchor}
-        open={Boolean(subcategoryAnchor)}
-        onClose={closeAll}
-        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-        transformOrigin={{ vertical: 'top', horizontal: 'left' }}
-        MenuListProps={{ dense: true }}
-        slotProps={{
-          paper: {
-            sx: {
-              minWidth: 260,
-              borderRadius: 2,
-              border: '1px solid rgba(15,23,42,0.08)',
-              boxShadow: '0px 14px 40px rgba(15,23,42,0.18)',
-            },
-          },
-        }}
-      >
-        {activeSubcategory?.children.map((item) => (
-          <MenuItem
-            key={item.to}
-            component={RouterLink}
-            to={item.to}
-            onClick={closeAll}
-            sx={{
-              fontWeight: 650,
-              borderRadius: 1,
-              mx: 0.75,
-              '&:hover': { bgcolor: 'rgba(26,115,232,0.10)' },
-            }}
-          >
-            {item.label}
-          </MenuItem>
-        ))}
+          {rootChildren.length ? (
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: {
+                  xs: '1fr',
+                  sm: 'repeat(2, minmax(210px, 1fr))',
+                  md: 'repeat(3, minmax(220px, 1fr))',
+                },
+                gap: 2,
+                maxHeight: 420,
+                overflow: 'auto',
+                pr: 1,
+              }}
+            >
+              {rootChildren.map((l2) => {
+                const l3 = l2.children ?? [];
+                return (
+                  <Box key={l2._id}>
+                    <Typography
+                      fontWeight={900}
+                      sx={{
+                        fontSize: 13,
+                        color: 'text.primary',
+                        mb: 1,
+                      }}
+                    >
+                      {l2.name}
+                    </Typography>
+
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
+                      {(l3.length ? l3 : [l2]).map((leaf) => (
+                        <MuiLink
+                          key={leaf._id}
+                          component={RouterLink}
+                          to={`/category/${leaf.slug}`}
+                          underline="none"
+                          onClick={closeAll}
+                          sx={{
+                            fontSize: 13,
+                            color: 'text.secondary',
+                            py: 0.25,
+                            '&:hover': { color: primary, textDecoration: 'underline' },
+                          }}
+                        >
+                          {leaf.name}
+                        </MuiLink>
+                      ))}
+                    </Box>
+                  </Box>
+                );
+              })}
+            </Box>
+          ) : (
+            <Typography color="text.secondary" sx={{ p: 1 }}>
+              No categories available.
+            </Typography>
+          )}
+        </Box>
       </Menu>
     </>
   );

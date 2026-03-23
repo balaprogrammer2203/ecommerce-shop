@@ -23,11 +23,16 @@ import {
   Typography,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import { useMemo, useState } from 'react';
+import useScrollTrigger from '@mui/material/useScrollTrigger';
+import { useEffect, useMemo, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 
+import { useAuth } from '../../../features/auth/hooks/useAuth';
+import {
+  fetchActiveCategoryTree,
+  type BackendCategoryTreeNode,
+} from '../../lib/categoryTreeClient';
 import { CategoryMenu } from '../CategoryMenu';
-import { categories } from '../CategoryMenu/categoryData';
 
 type HeaderProps = {
   showCategories?: boolean;
@@ -36,10 +41,13 @@ type HeaderProps = {
 export const Header = ({ showCategories = true }: HeaderProps) => {
   const theme = useTheme();
   const primary = theme.palette.primary.main;
+  const scrolled = useScrollTrigger({ disableHysteresis: true, threshold: 6 });
+  const { isAuthenticated, user } = useAuth();
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [openCategory, setOpenCategory] = useState<string | null>(null);
   const [openSubcategory, setOpenSubcategory] = useState<string | null>(null);
+  const [drawerTree, setDrawerTree] = useState<BackendCategoryTreeNode[] | null>(null);
 
   const resetDrawerNavigation = () => {
     setDrawerOpen(false);
@@ -47,7 +55,28 @@ export const Header = ({ showCategories = true }: HeaderProps) => {
     setOpenSubcategory(null);
   };
 
-  const drawerCategories = useMemo(() => (showCategories ? categories : []), [showCategories]);
+  const drawerCategories = useMemo(() => drawerTree ?? [], [drawerTree]);
+
+  // Mobile drawer uses the same backend category tree (roots -> L2 -> L3 links).
+  useEffect(() => {
+    if (!showCategories) return;
+    if (drawerTree !== null) return;
+
+    let mounted = true;
+    fetchActiveCategoryTree()
+      .then((data) => {
+        if (!mounted) return;
+        setDrawerTree(data);
+      })
+      .catch(() => {
+        if (!mounted) return;
+        setDrawerTree([]);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [drawerTree, showCategories]);
 
   const openDrawer = () => {
     setDrawerOpen(true);
@@ -56,8 +85,18 @@ export const Header = ({ showCategories = true }: HeaderProps) => {
   };
 
   return (
-    <Box sx={{ position: 'sticky', top: 0, zIndex: (theme) => theme.zIndex.appBar }}>
-      <AppBar position="static" elevation={0} sx={{ bgcolor: primary }}>
+    <>
+      <AppBar
+        position="sticky"
+        elevation={scrolled ? 4 : 0}
+        sx={{
+          top: 0,
+          zIndex: (t) => t.zIndex.appBar,
+          bgcolor: primary,
+          transition: (t) =>
+            t.transitions.create('box-shadow', { duration: t.transitions.duration.short }),
+        }}
+      >
         <Container maxWidth="lg">
           <Toolbar sx={{ gap: 2, minHeight: { xs: 56, sm: 60, md: 64 } }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
@@ -132,13 +171,13 @@ export const Header = ({ showCategories = true }: HeaderProps) => {
 
               <IconButton
                 component={RouterLink}
-                to="/login"
+                to={isAuthenticated ? '/account/orders' : '/login'}
                 sx={{
                   color: '#fff',
                   display: { xs: 'inline-flex', sm: 'none' },
                   '&:hover': { bgcolor: 'rgba(255,255,255,0.12)' },
                 }}
-                aria-label="login"
+                aria-label={isAuthenticated ? 'my account' : 'login'}
               >
                 <AccountCircleOutlinedIcon />
               </IconButton>
@@ -156,22 +195,45 @@ export const Header = ({ showCategories = true }: HeaderProps) => {
                 <ShoppingCartOutlinedIcon />
               </IconButton>
 
-              <Button
-                component={RouterLink}
-                to="/login"
-                variant="contained"
-                disableElevation
-                sx={{
-                  display: { xs: 'none', sm: 'inline-flex' },
-                  bgcolor: '#fff',
-                  color: primary,
-                  fontWeight: 700,
-                  px: 3,
-                  '&:hover': { bgcolor: 'rgba(255,255,255,0.92)' },
-                }}
-              >
-                Login
-              </Button>
+              {isAuthenticated ? (
+                <Button
+                  component={RouterLink}
+                  to="/account/orders"
+                  variant="contained"
+                  disableElevation
+                  sx={{
+                    display: { xs: 'none', sm: 'inline-flex' },
+                    bgcolor: '#fff',
+                    color: primary,
+                    fontWeight: 700,
+                    px: 2,
+                    maxWidth: 200,
+                    '&:hover': { bgcolor: 'rgba(255,255,255,0.92)' },
+                  }}
+                  startIcon={<AccountCircleOutlinedIcon />}
+                >
+                  <Box component="span" sx={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {user?.name?.split(' ')[0] ?? 'Account'}
+                  </Box>
+                </Button>
+              ) : (
+                <Button
+                  component={RouterLink}
+                  to="/login"
+                  variant="contained"
+                  disableElevation
+                  sx={{
+                    display: { xs: 'none', sm: 'inline-flex' },
+                    bgcolor: '#fff',
+                    color: primary,
+                    fontWeight: 700,
+                    px: 3,
+                    '&:hover': { bgcolor: 'rgba(255,255,255,0.92)' },
+                  }}
+                >
+                  Login
+                </Button>
+              )}
 
               <Button
                 component={RouterLink}
@@ -278,39 +340,39 @@ export const Header = ({ showCategories = true }: HeaderProps) => {
 
           <List disablePadding>
             {drawerCategories.map((cat) => {
-              const catKey = cat.label;
-              const catOpen = openCategory === catKey;
+              const catId = cat._id;
+              const catOpen = openCategory === catId;
+              const catChildren = cat.children ?? [];
 
               return (
-                <Box key={catKey}>
+                <Box key={catId}>
                   <ListItemButton
                     onClick={() => {
-                      setOpenCategory(catOpen ? null : catKey);
+                      setOpenCategory(catOpen ? null : catId);
                       setOpenSubcategory(null);
                     }}
                     sx={{ px: 2, py: 1 }}
                   >
-                    <ListItemText
-                      primary={cat.label}
-                      primaryTypographyProps={{ fontWeight: 700 }}
-                    />
+                    <ListItemText primary={cat.name} primaryTypographyProps={{ fontWeight: 700 }} />
                     {catOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                   </ListItemButton>
 
                   <Collapse in={catOpen} timeout="auto" unmountOnExit>
                     <Box sx={{ pl: 2 }}>
-                      {cat.children.map((sub) => {
-                        const subKey = `${catKey}|${sub.label}`;
-                        const subOpen = openSubcategory === subKey;
+                      {catChildren.map((sub) => {
+                        const subId = sub._id;
+                        const subOpen = openSubcategory === subId;
+                        const l3 = sub.children ?? [];
+                        const leaves = l3.length ? l3 : [sub];
 
                         return (
-                          <Box key={subKey}>
+                          <Box key={subId}>
                             <ListItemButton
-                              onClick={() => setOpenSubcategory(subOpen ? null : subKey)}
+                              onClick={() => setOpenSubcategory(subOpen ? null : subId)}
                               sx={{ px: 2, py: 0.75 }}
                             >
                               <ListItemText
-                                primary={sub.label}
+                                primary={sub.name}
                                 primaryTypographyProps={{ fontWeight: 650 }}
                               />
                               {subOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
@@ -318,15 +380,15 @@ export const Header = ({ showCategories = true }: HeaderProps) => {
 
                             <Collapse in={subOpen} timeout="auto" unmountOnExit>
                               <List disablePadding>
-                                {sub.children.map((item) => (
+                                {leaves.map((leaf) => (
                                   <ListItemButton
-                                    key={item.to}
+                                    key={leaf._id}
                                     component={RouterLink}
-                                    to={item.to}
+                                    to={`/category/${leaf.slug}`}
                                     onClick={resetDrawerNavigation}
                                     sx={{ px: 2, py: 0.75, pl: 4 }}
                                   >
-                                    <ListItemText primary={item.label} />
+                                    <ListItemText primary={leaf.name} />
                                   </ListItemButton>
                                 ))}
                               </List>
@@ -346,11 +408,11 @@ export const Header = ({ showCategories = true }: HeaderProps) => {
           <List disablePadding>
             <ListItemButton
               component={RouterLink}
-              to="/login"
+              to={isAuthenticated ? '/account/orders' : '/login'}
               onClick={resetDrawerNavigation}
               sx={{ px: 2, py: 1 }}
             >
-              <ListItemText primary="Login" />
+              <ListItemText primary={isAuthenticated ? 'My account' : 'Login'} />
             </ListItemButton>
             <ListItemButton
               component={RouterLink}
@@ -363,6 +425,6 @@ export const Header = ({ showCategories = true }: HeaderProps) => {
           </List>
         </Box>
       </Drawer>
-    </Box>
+    </>
   );
 };

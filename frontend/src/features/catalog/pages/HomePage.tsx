@@ -1,17 +1,64 @@
-import { Paper, Stack, Typography } from '@mui/material';
+import { useCallback, useMemo, useState } from 'react';
+
+import {
+  CategoryGrid,
+  FeaturedProductsSection,
+  HeroBanner,
+  NewsletterSection,
+  OfferBanners,
+  TestimonialsSection,
+  TrendingCarousel,
+} from '../../../shared/ui/home';
+import { useAddItemToCartMutation } from '../../cart/api/cartApi';
+import { useListProductsQuery } from '../api/catalogApi';
 
 export const HomePage = () => {
+  const { data, isLoading } = useListProductsQuery({ limit: 16 });
+  const [addToCart] = useAddItemToCartMutation();
+  const [addingProductId, setAddingProductId] = useState<string | null>(null);
+
+  const products = useMemo(() => data?.products ?? [], [data]);
+
+  const featured = useMemo(() => products.slice(0, 8), [products]);
+  const trending = useMemo(
+    () => [...products].slice(0, Math.min(10, products.length)).reverse(),
+    [products],
+  );
+
+  const handleAddToCart = useCallback(
+    (productId: string) => {
+      void (async () => {
+        setAddingProductId(productId);
+        try {
+          await addToCart({ productId, qty: 1 }).unwrap();
+        } catch {
+          // Snackbar can be added later
+        } finally {
+          setAddingProductId(null);
+        }
+      })();
+    },
+    [addToCart],
+  );
+
   return (
-    <Stack spacing={3}>
-      <Typography variant="h4" fontWeight={700}>
-        Welcome to ShopSphere
-      </Typography>
-      <Paper variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
-        <Typography color="text.secondary">
-          Use the category navigation menu above to browse products by category, subcategory, and
-          item.
-        </Typography>
-      </Paper>
-    </Stack>
+    <>
+      <HeroBanner />
+      <CategoryGrid />
+      <FeaturedProductsSection
+        products={featured}
+        isLoading={isLoading}
+        onAddToCart={handleAddToCart}
+        addingProductId={addingProductId}
+      />
+      <OfferBanners />
+      <TrendingCarousel
+        products={trending}
+        onAddToCart={handleAddToCart}
+        addingProductId={addingProductId}
+      />
+      <TestimonialsSection />
+      <NewsletterSection />
+    </>
   );
 };

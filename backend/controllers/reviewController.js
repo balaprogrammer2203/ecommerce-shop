@@ -67,7 +67,7 @@ const createOrUpdateReview = asyncHandler(async (req, res) => {
         isApproved: true,
       },
     },
-    { new: true, upsert: true, runValidators: true }
+    { returnDocument: 'after', upsert: true, runValidators: true }
   );
 
   // Update product review stats.
@@ -85,11 +85,7 @@ const createOrUpdateReview = asyncHandler(async (req, res) => {
   const avgRating = stats[0]?.avgRating ?? 0;
   const numReviews = stats[0]?.numReviews ?? 0;
 
-  await Product.findByIdAndUpdate(
-    productId,
-    { averageRating: avgRating, numReviews },
-    { new: false }
-  );
+  await Product.findByIdAndUpdate(productId, { averageRating: avgRating, numReviews }, { returnDocument: 'before' });
 
   return res.status(201).json(review);
 });

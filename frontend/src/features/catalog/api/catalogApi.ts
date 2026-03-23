@@ -8,10 +8,47 @@ export const catalogApi = createApi({
   baseQuery,
   tagTypes: ['Product'],
   endpoints: (builder) => ({
-    listProducts: builder.query<ProductListResponse, { keyword?: string; page?: number; limit?: number }>({
-      query: ({ keyword, page, limit }) => ({
+    listProducts: builder.query<
+      ProductListResponse,
+      {
+        keyword?: string;
+        page?: number;
+        limit?: number;
+        categoryId?: string;
+        categorySlug?: string;
+        category?: string;
+        minPrice?: number;
+        maxPrice?: number;
+        brand?: string;
+        /** JSON string, e.g. '{"ram":"8GB"}' */
+        attrs?: string;
+      }
+    >({
+      query: ({
+        keyword,
+        page,
+        limit,
+        categoryId,
+        categorySlug,
+        category,
+        minPrice,
+        maxPrice,
+        brand,
+        attrs,
+      }) => ({
         url: '/products',
-        params: { keyword, page, limit },
+        params: {
+          keyword,
+          page,
+          limit,
+          categoryId,
+          categorySlug,
+          category,
+          minPrice,
+          maxPrice,
+          brand,
+          attrs,
+        },
       }),
       providesTags: (result) =>
         result?.products

@@ -1,13 +1,19 @@
-import { Alert, Box, Button, CircularProgress, Stack, TextField, Typography } from '@mui/material';
+import {
+  Alert,
+  Box,
+  Button,
+  CircularProgress,
+  Container,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material';
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { useAddItemToCartMutation } from '../../cart/api/cartApi';
+import { useProductReviewsQuery, useSubmitReviewMutation } from '../../reviews/api/reviewsApi';
 import { useProductDetailQuery } from '../api/catalogApi';
-import {
-  useProductReviewsQuery,
-  useSubmitReviewMutation,
-} from '../../reviews/api/reviewsApi';
 
 export const ProductPage = () => {
   const { productId } = useParams();
@@ -38,133 +44,152 @@ export const ProductPage = () => {
       });
   };
 
+  const pageSx = { py: { xs: 2, md: 4 }, px: { xs: 2, sm: 3 } };
+
   if (!productId) {
-    return <Alert severity="error">Missing product id.</Alert>;
+    return (
+      <Container maxWidth="lg" sx={pageSx}>
+        <Alert severity="error">Missing product id.</Alert>
+      </Container>
+    );
   }
 
   if (isLoading) {
-    return <CircularProgress />;
+    return (
+      <Container maxWidth="lg" sx={pageSx}>
+        <Stack alignItems="center" py={6}>
+          <CircularProgress />
+        </Stack>
+      </Container>
+    );
   }
 
   if (isError || !product) {
-    return <Alert severity="error">Failed to load product.</Alert>;
+    return (
+      <Container maxWidth="lg" sx={pageSx}>
+        <Alert severity="error">Failed to load product.</Alert>
+      </Container>
+    );
   }
 
   return (
-    <Stack spacing={3}>
-      <Typography variant="h4" fontWeight={700}>
-        {product.name}
-      </Typography>
-      {(product.averageRating !== undefined || product.numReviews !== undefined) && (
-        <Typography color="text.secondary">
-          Rating: {(product.averageRating ?? 0).toFixed(1)} / 5 • Reviews: {product.numReviews ?? 0}
+    <Container maxWidth="lg" sx={pageSx}>
+      <Stack spacing={3}>
+        <Typography variant="h4" fontWeight={700}>
+          {product.title ?? product.name}
         </Typography>
-      )}
-      <Box>
-        <Typography variant="h6">Description</Typography>
-        <Typography color="text.secondary">{product.description}</Typography>
-      </Box>
-      <Stack direction="row" spacing={2} flexWrap="wrap" alignItems="center">
-        <Button variant="contained" size="large" disabled={isAdding} onClick={handleAddToCart}>
-          Add to cart
-        </Button>
-        <Button variant="outlined" size="large">
-          Buy now
-        </Button>
-      </Stack>
+        {(product.averageRating !== undefined || product.numReviews !== undefined) && (
+          <Typography color="text.secondary">
+            Rating: {(product.averageRating ?? 0).toFixed(1)} / 5 • Reviews:{' '}
+            {product.numReviews ?? 0}
+          </Typography>
+        )}
+        <Box>
+          <Typography variant="h6">Description</Typography>
+          <Typography color="text.secondary">{product.description}</Typography>
+        </Box>
+        <Stack direction="row" spacing={2} flexWrap="wrap" alignItems="center">
+          <Button variant="contained" size="large" disabled={isAdding} onClick={handleAddToCart}>
+            Add to cart
+          </Button>
+          <Button variant="outlined" size="large">
+            Buy now
+          </Button>
+        </Stack>
 
-      <Box>
-        <Typography variant="h6" gutterBottom>
-          Reviews
-        </Typography>
+        <Box>
+          <Typography variant="h6" gutterBottom>
+            Reviews
+          </Typography>
 
-        {isReviewsLoading ? (
-          <Stack alignItems="center" justifyContent="center" minHeight={120}>
-            <CircularProgress size={24} />
-          </Stack>
-        ) : isReviewsError ? (
-          <Alert severity="error">Failed to load reviews.</Alert>
-        ) : (
-          <Stack spacing={2}>
-            {reviewsData?.reviews?.length ? (
-              reviewsData.reviews.map((r) => (
-                <PaperReview
-                  key={r._id}
-                  rating={r.rating}
-                  title={r.title}
-                  comment={r.comment}
-                  authorName={r.user?.name ?? 'Customer'}
-                />
-              ))
-            ) : (
-              <Alert severity="info" variant="outlined">
-                No reviews yet.
-              </Alert>
-            )}
+          {isReviewsLoading ? (
+            <Stack alignItems="center" justifyContent="center" minHeight={120}>
+              <CircularProgress size={24} />
+            </Stack>
+          ) : isReviewsError ? (
+            <Alert severity="error">Failed to load reviews.</Alert>
+          ) : (
+            <Stack spacing={2}>
+              {reviewsData?.reviews?.length ? (
+                reviewsData.reviews.map((r) => (
+                  <PaperReview
+                    key={r._id}
+                    rating={r.rating}
+                    title={r.title}
+                    comment={r.comment}
+                    authorName={r.user?.name ?? 'Customer'}
+                  />
+                ))
+              ) : (
+                <Alert severity="info" variant="outlined">
+                  No reviews yet.
+                </Alert>
+              )}
 
-            <Stack
-              spacing={2}
-              sx={{
-                p: 2,
-                borderRadius: 2,
-                border: '1px solid',
-                borderColor: 'divider',
-              }}
-            >
-              <Typography fontWeight={700}>Write a review</Typography>
-
-              <TextField
-                label="Rating (1-5)"
-                type="number"
-                inputProps={{ min: 1, max: 5, step: 1 }}
-                value={rating}
-                onChange={(e) => setRating(Number(e.target.value))}
-              />
-              <TextField
-                label="Title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                fullWidth
-              />
-              <TextField
-                label="Comment"
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                fullWidth
-                multiline
-                minRows={3}
-              />
-
-              <Button
-                variant="contained"
-                disabled={isSubmitting}
-                onClick={() => {
-                  if (!productId) return;
-                  void (async () => {
-                    try {
-                      await submitReview({
-                        productId,
-                        payload: {
-                          rating,
-                          title: title || undefined,
-                          comment: comment || undefined,
-                        },
-                      }).unwrap();
-                      setTitle('');
-                      setComment('');
-                    } catch {
-                      // UI keeps it minimal; error can be shown later.
-                    }
-                  })();
+              <Stack
+                spacing={2}
+                sx={{
+                  p: 2,
+                  borderRadius: 2,
+                  border: '1px solid',
+                  borderColor: 'divider',
                 }}
               >
-                Submit review
-              </Button>
+                <Typography fontWeight={700}>Write a review</Typography>
+
+                <TextField
+                  label="Rating (1-5)"
+                  type="number"
+                  inputProps={{ min: 1, max: 5, step: 1 }}
+                  value={rating}
+                  onChange={(e) => setRating(Number(e.target.value))}
+                />
+                <TextField
+                  label="Title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  fullWidth
+                />
+                <TextField
+                  label="Comment"
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  fullWidth
+                  multiline
+                  minRows={3}
+                />
+
+                <Button
+                  variant="contained"
+                  disabled={isSubmitting}
+                  onClick={() => {
+                    if (!productId) return;
+                    void (async () => {
+                      try {
+                        await submitReview({
+                          productId,
+                          payload: {
+                            rating,
+                            title: title || undefined,
+                            comment: comment || undefined,
+                          },
+                        }).unwrap();
+                        setTitle('');
+                        setComment('');
+                      } catch {
+                        // UI keeps it minimal; error can be shown later.
+                      }
+                    })();
+                  }}
+                >
+                  Submit review
+                </Button>
+              </Stack>
             </Stack>
-          </Stack>
-        )}
-      </Box>
-    </Stack>
+          )}
+        </Box>
+      </Stack>
+    </Container>
   );
 };
 

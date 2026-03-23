@@ -20,9 +20,11 @@ module.exports = {
     { name: 'Auth', description: 'Authentication and user profile' },
     { name: 'Products', description: 'Product catalog' },
     { name: 'Categories', description: 'Product categories' },
+    { name: 'CategoryAttributes', description: 'Per-category filter definitions (enums)' },
     { name: 'Reviews', description: 'Product reviews' },
     { name: 'Orders', description: 'Order management' },
     { name: 'Cart', description: 'Shopping cart' },
+    { name: 'Wishlist', description: 'Saved products (authenticated)' },
   ],
   servers: [{ url: '/', description: 'Same origin' }],
   components: {
@@ -79,16 +81,38 @@ module.exports = {
       },
       Product: {
         type: 'object',
+        description:
+          'Catalog product. Stored with list `price` + optional `discountPrice`; JSON responses also expose legacy `price` (amount to pay), `originalPrice`, `name`, `image`, `countInStock`.',
         properties: {
           _id: { type: 'string' },
-          name: { type: 'string' },
+          title: { type: 'string' },
+          slug: { type: 'string' },
+          name: { type: 'string', description: 'Alias of title (legacy)' },
           description: { type: 'string' },
-          price: { type: 'number' },
-          image: { type: 'string', nullable: true },
+          price: { type: 'number', description: 'Amount customer pays (effective); list price when on sale is originalPrice' },
+          discountPrice: { type: 'number', nullable: true, description: 'Sale price as stored in DB (may be omitted in responses after transform)' },
+          originalPrice: { type: 'number', nullable: true },
+          images: { type: 'array', items: { type: 'string' } },
+          image: { type: 'string', nullable: true, description: 'First image (legacy)' },
+          categories: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                _id: { type: 'string' },
+                slug: { type: 'string' },
+                path: { type: 'string' },
+                name: { type: 'string' },
+              },
+            },
+          },
+          primaryCategoryId: { type: 'string', nullable: true },
           category: { type: 'string' },
           categoryId: { type: 'string', nullable: true },
-          countInStock: { type: 'number' },
+          stock: { type: 'number' },
+          countInStock: { type: 'number', description: 'Alias of stock' },
           brand: { type: 'string', nullable: true },
+          attributes: { type: 'object', additionalProperties: true },
           averageRating: { type: 'number' },
           numReviews: { type: 'number' },
         },
@@ -100,9 +124,44 @@ module.exports = {
           name: { type: 'string' },
           slug: { type: 'string' },
           description: { type: 'string', nullable: true },
+          ancestors: { type: 'array', items: { type: 'string' } },
+          path: { type: 'string', description: 'Materialized path e.g. /electronics/mobiles' },
+          level: { type: 'integer', minimum: 0, maximum: 2, description: '0=L1, 1=L2, 2=L3' },
+          sortOrder: { type: 'number' },
           isActive: { type: 'boolean' },
-          parentCategory: { type: 'string', nullable: true },
+          isLeaf: { type: 'boolean' },
+          parentId: { type: 'string', nullable: true },
+          parentCategory: { type: 'string', nullable: true, description: 'Alias of parentId' },
+          image: { type: 'string', nullable: true },
+          metaTitle: { type: 'string', nullable: true },
+          metaDescription: { type: 'string', nullable: true },
+          createdAt: { type: 'string', format: 'date-time', nullable: true },
+          updatedAt: { type: 'string', format: 'date-time', nullable: true },
         },
+      },
+      CategoryAttribute: {
+        type: 'object',
+        properties: {
+          _id: { type: 'string' },
+          categoryId: { type: 'string' },
+          key: { type: 'string' },
+          label: { type: 'string' },
+          values: { type: 'array', items: { type: 'string' } },
+          sortOrder: { type: 'number' },
+          isActive: { type: 'boolean' },
+        },
+      },
+      CategoryTreeNode: {
+        type: 'object',
+        description: 'Category fields plus optional nested children (same shape at each level)',
+        additionalProperties: true,
+      },
+      WishlistResponse: {
+        type: 'object',
+        properties: {
+          productIds: { type: 'array', items: { type: 'string' } },
+        },
+        required: ['productIds'],
       },
       Review: {
         type: 'object',
@@ -324,8 +383,21 @@ module.exports = {
         operationId: 'getProducts',
         parameters: [
           { name: 'page', in: 'query', required: false, schema: { type: 'integer', minimum: 1, default: 1 } },
-          { name: 'limit', in: 'query', required: false, schema: { type: 'integer', minimum: 1, maximum: 50, default: 20 } },
+          { name: 'limit', in: 'query', required: false, schema: { type: 'integer', minimum: 1, maximum: 100, default: 20 } },
           { name: 'keyword', in: 'query', required: false, schema: { type: 'string' } },
+          { name: 'categoryId', in: 'query', required: false, schema: { type: 'string' }, description: 'Includes matching category subtree' },
+          { name: 'categorySlug', in: 'query', required: false, schema: { type: 'string' } },
+          { name: 'category', in: 'query', required: false, schema: { type: 'string' }, description: 'Alias of categorySlug / id' },
+          { name: 'minPrice', in: 'query', required: false, schema: { type: 'number' } },
+          { name: 'maxPrice', in: 'query', required: false, schema: { type: 'number' } },
+          { name: 'brand', in: 'query', required: false, schema: { type: 'string' } },
+          {
+            name: 'attrs',
+            in: 'query',
+            required: false,
+            schema: { type: 'string' },
+            description: 'JSON object of attribute filters, e.g. {"ram":"8GB"}',
+          },
         ],
         responses: {
           '200': {
@@ -359,14 +431,21 @@ module.exports = {
                 type: 'object',
                 required: ['name', 'description', 'price'],
                 properties: {
-                  name: { type: 'string' },
+                  title: { type: 'string' },
+                  name: { type: 'string', description: 'Alias of title' },
+                  slug: { type: 'string' },
                   description: { type: 'string' },
-                  price: { type: 'number' },
+                  price: { type: 'number', description: 'List price, or sale price if using originalPrice legacy pair' },
+                  discountPrice: { type: 'number', nullable: true },
+                  originalPrice: { type: 'number', nullable: true, description: 'Legacy: when greater than price, price is treated as sale' },
+                  images: { type: 'array', items: { type: 'string' } },
                   image: { type: 'string', nullable: true },
                   category: { type: 'string' },
-                  categoryId: { type: 'string', nullable: true },
+                  categoryId: { type: 'string' },
+                  stock: { type: 'number' },
                   countInStock: { type: 'number' },
                   brand: { type: 'string', nullable: true },
+                  attributes: { type: 'object', additionalProperties: true },
                 },
               },
             },
@@ -404,14 +483,21 @@ module.exports = {
               schema: {
                 type: 'object',
                 properties: {
+                  title: { type: 'string' },
                   name: { type: 'string' },
+                  slug: { type: 'string' },
                   description: { type: 'string' },
                   price: { type: 'number' },
+                  discountPrice: { type: 'number', nullable: true },
+                  originalPrice: { type: 'number', nullable: true },
+                  images: { type: 'array', items: { type: 'string' } },
                   image: { type: 'string', nullable: true },
                   category: { type: 'string' },
                   categoryId: { type: 'string', nullable: true },
+                  stock: { type: 'number' },
                   countInStock: { type: 'number' },
                   brand: { type: 'string', nullable: true },
+                  attributes: { type: 'object', additionalProperties: true },
                 },
               },
             },
@@ -437,13 +523,44 @@ module.exports = {
       },
     },
 
+    '/api/categories/tree': {
+      get: {
+        tags: ['Categories'],
+        summary: 'Category tree (nested L1→L2→L3)',
+        operationId: 'getCategoryTree',
+        parameters: [
+          {
+            name: 'active',
+            in: 'query',
+            required: false,
+            schema: { type: 'string', enum: ['true', 'false', 'all'] },
+            description: 'Defaults to active categories only. Use `all` to include inactive.',
+          },
+        ],
+        responses: {
+          '200': {
+            description: 'Nested roots with children',
+            content: {
+              'application/json': { schema: { type: 'array', items: { $ref: '#/components/schemas/CategoryTreeNode' } } },
+            },
+          },
+        },
+      },
+    },
+
     '/api/categories': {
       get: {
         tags: ['Categories'],
-        summary: 'List categories',
+        summary: 'List categories (flat, with parent populated)',
         operationId: 'getCategories',
         parameters: [
-          { name: 'active', in: 'query', required: false, schema: { type: 'boolean' }, description: 'Set to filter by isActive=true' },
+          {
+            name: 'active',
+            in: 'query',
+            required: false,
+            schema: { type: 'string', enum: ['true', 'false', 'all'] },
+            description: 'Defaults to active only. `false` = inactive only. `all` = every row.',
+          },
         ],
         responses: {
           '200': {
@@ -469,7 +586,12 @@ module.exports = {
                   slug: { type: 'string' },
                   description: { type: 'string' },
                   isActive: { type: 'boolean' },
-                  parentCategory: { type: 'string', nullable: true },
+                  parentId: { type: 'string', nullable: true },
+                  parentCategory: { type: 'string', nullable: true, description: 'Alias of parentId' },
+                  sortOrder: { type: 'number' },
+                  image: { type: 'string', nullable: true },
+                  metaTitle: { type: 'string', nullable: true },
+                  metaDescription: { type: 'string', nullable: true },
                 },
               },
             },
@@ -483,10 +605,37 @@ module.exports = {
       },
     },
 
+    '/api/categories/{id}/breadcrumbs': {
+      get: {
+        tags: ['Categories'],
+        summary: 'Breadcrumb trail for a category',
+        operationId: 'getCategoryBreadcrumbs',
+        parameters: [
+          {
+            name: 'id',
+            in: 'path',
+            required: true,
+            schema: { type: 'string' },
+            description: 'Mongo id or category slug',
+          },
+        ],
+        responses: {
+          '200': {
+            description: 'Ordered from root → current',
+            content: {
+              'application/json': {
+                schema: { type: 'array', items: { type: 'object', additionalProperties: true } },
+              },
+            },
+          },
+        },
+      },
+    },
+
     '/api/categories/{id}': {
       get: {
         tags: ['Categories'],
-        summary: 'Get category by id',
+        summary: 'Get category by Mongo id or slug',
         operationId: 'getCategoryById',
         parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
         responses: {
@@ -510,7 +659,12 @@ module.exports = {
                   slug: { type: 'string' },
                   description: { type: 'string' },
                   isActive: { type: 'boolean' },
+                  parentId: { type: 'string', nullable: true },
                   parentCategory: { type: 'string', nullable: true },
+                  sortOrder: { type: 'number' },
+                  image: { type: 'string', nullable: true },
+                  metaTitle: { type: 'string', nullable: true },
+                  metaDescription: { type: 'string', nullable: true },
                 },
               },
             },
@@ -531,6 +685,106 @@ module.exports = {
             description: 'Deactivated',
             content: { 'application/json': { schema: { type: 'object', properties: { message: { type: 'string' } } } } },
           },
+          '400': { description: 'Category has subcategories', content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } } },
+        },
+      },
+    },
+
+    '/api/category-attributes': {
+      get: {
+        tags: ['CategoryAttributes'],
+        summary: 'List attribute definitions for a category',
+        operationId: 'listCategoryAttributes',
+        parameters: [
+          { name: 'categoryId', in: 'query', required: true, schema: { type: 'string' } },
+          { name: 'active', in: 'query', required: false, schema: { type: 'boolean' } },
+        ],
+        responses: {
+          '200': {
+            description: 'Attributes',
+            content: {
+              'application/json': { schema: { type: 'array', items: { $ref: '#/components/schemas/CategoryAttribute' } } },
+            },
+          },
+        },
+      },
+      post: {
+        tags: ['CategoryAttributes'],
+        summary: 'Create category attribute (admin)',
+        operationId: 'createCategoryAttribute',
+        security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['categoryId', 'label'],
+                properties: {
+                  categoryId: { type: 'string' },
+                  key: { type: 'string' },
+                  label: { type: 'string' },
+                  values: { type: 'array', items: { type: 'string' } },
+                  sortOrder: { type: 'number' },
+                  isActive: { type: 'boolean' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          '201': {
+            description: 'Created',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/CategoryAttribute' } } },
+          },
+        },
+      },
+    },
+
+    '/api/category-attributes/{id}': {
+      get: {
+        tags: ['CategoryAttributes'],
+        summary: 'Get category attribute by id',
+        operationId: 'getCategoryAttributeById',
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+        responses: {
+          '200': { description: 'Row', content: { 'application/json': { schema: { $ref: '#/components/schemas/CategoryAttribute' } } } },
+        },
+      },
+      put: {
+        tags: ['CategoryAttributes'],
+        summary: 'Update category attribute (admin)',
+        operationId: 'updateCategoryAttribute',
+        security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  key: { type: 'string' },
+                  label: { type: 'string' },
+                  values: { type: 'array', items: { type: 'string' } },
+                  sortOrder: { type: 'number' },
+                  isActive: { type: 'boolean' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          '200': { description: 'Updated', content: { 'application/json': { schema: { $ref: '#/components/schemas/CategoryAttribute' } } } },
+        },
+      },
+      delete: {
+        tags: ['CategoryAttributes'],
+        summary: 'Delete category attribute (admin)',
+        operationId: 'deleteCategoryAttribute',
+        security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+        responses: {
+          '200': { description: 'Removed', content: { 'application/json': { schema: { type: 'object', properties: { message: { type: 'string' } } } } } },
         },
       },
     },
@@ -783,6 +1037,97 @@ module.exports = {
         security: [{ bearerAuth: [] }, { cookieAuth: [] }],
         responses: {
           '200': { description: 'Cart cleared', content: { 'application/json': { schema: { $ref: '#/components/schemas/Cart' } } } },
+        },
+      },
+    },
+
+    '/api/wishlist': {
+      get: {
+        tags: ['Wishlist'],
+        summary: 'Get wishlisted product ids',
+        operationId: 'getWishlist',
+        security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+        responses: {
+          '200': {
+            description: 'Wishlist',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/WishlistResponse' } } },
+          },
+          '401': { $ref: '#/components/responses/Unauthorized' },
+        },
+      },
+    },
+
+    '/api/wishlist/items': {
+      post: {
+        tags: ['Wishlist'],
+        summary: 'Add product to wishlist',
+        operationId: 'addToWishlist',
+        security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['productId'],
+                properties: { productId: { type: 'string' } },
+              },
+            },
+          },
+        },
+        responses: {
+          '201': {
+            description: 'Updated wishlist',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/WishlistResponse' } } },
+          },
+          '401': { $ref: '#/components/responses/Unauthorized' },
+        },
+      },
+    },
+
+    '/api/wishlist/items/{productId}': {
+      delete: {
+        tags: ['Wishlist'],
+        summary: 'Remove product from wishlist',
+        operationId: 'removeFromWishlist',
+        security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+        parameters: [{ name: 'productId', in: 'path', required: true, schema: { type: 'string' } }],
+        responses: {
+          '200': {
+            description: 'Updated wishlist',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/WishlistResponse' } } },
+          },
+          '401': { $ref: '#/components/responses/Unauthorized' },
+        },
+      },
+    },
+
+    '/api/wishlist/merge': {
+      post: {
+        tags: ['Wishlist'],
+        summary: 'Merge guest wishlist product ids into account',
+        operationId: 'mergeWishlist',
+        security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['productIds'],
+                properties: { productIds: { type: 'array', items: { type: 'string' } } },
+              },
+            },
+          },
+        },
+        responses: {
+          '200': {
+            description: 'Merged wishlist',
+            content: {
+              'application/json': { schema: { $ref: '#/components/schemas/WishlistResponse' } },
+            },
+          },
+          '401': { $ref: '#/components/responses/Unauthorized' },
         },
       },
     },

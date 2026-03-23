@@ -4,6 +4,7 @@ import { AdminDashboardPage } from '../features/admin/pages/AdminDashboardPage';
 import { AuthGuard } from '../features/auth/components/AuthGuard';
 import { LoginPage } from '../features/auth/pages/LoginPage';
 import { CartPage } from '../features/cart/pages/CartPage';
+import { CategoryPage } from '../features/catalog/pages/CategoryPage';
 import { HomePage } from '../features/catalog/pages/HomePage';
 import { ProductPage } from '../features/catalog/pages/ProductPage';
 import { CheckoutPage } from '../features/checkout/pages/CheckoutPage';
@@ -22,6 +23,7 @@ export const appRouter = createBrowserRouter([
     element: <PublicLayout />,
     children: [
       { index: true, element: <HomePage /> },
+      { path: 'category/:slug', element: <CategoryPage /> },
       { path: 'product/:productId', element: <ProductPage /> },
     ],
   },

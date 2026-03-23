@@ -38,19 +38,20 @@ const addItemToCart = asyncHandler(async (req, res) => {
   const cart = await Cart.findOne({ user: userId });
   const nextCart = cart ?? (await Cart.create({ user: userId, items: [] }));
 
+  const snap = Product.lineSnapshot(productDoc);
   const existingItem = nextCart.items.find((it) => it.product.toString() === finalProductId);
   if (existingItem) {
     existingItem.qty += numericQty;
-    existingItem.price = productDoc.price;
-    existingItem.name = productDoc.name;
-    existingItem.image = productDoc.image;
+    existingItem.price = snap.price;
+    existingItem.name = snap.name;
+    existingItem.image = snap.image;
   } else {
     nextCart.items.push({
       product: productDoc._id,
-      name: productDoc.name,
+      name: snap.name,
       qty: numericQty,
-      price: productDoc.price,
-      image: productDoc.image,
+      price: snap.price,
+      image: snap.image,
     });
   }
 
@@ -84,9 +85,10 @@ const updateCartItemQty = asyncHandler(async (req, res) => {
 
   const productDoc = await Product.findById(productId);
   if (productDoc) {
-    item.price = productDoc.price;
-    item.name = productDoc.name;
-    item.image = productDoc.image;
+    const snap = Product.lineSnapshot(productDoc);
+    item.price = snap.price;
+    item.name = snap.name;
+    item.image = snap.image;
   }
 
   cart.recalculateTotals();

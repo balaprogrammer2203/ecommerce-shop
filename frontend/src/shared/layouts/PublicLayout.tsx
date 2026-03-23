@@ -1,20 +1,17 @@
-import { Box, Container, Typography } from '@mui/material';
+import { Box } from '@mui/material';
 import { Outlet } from 'react-router-dom';
 
 import { Header } from '../ui/Header';
+import { SiteFooter } from '../ui/home/SiteFooter';
 
 export const PublicLayout = () => {
   return (
     <Box minHeight="100vh" display="flex" flexDirection="column">
       <Header />
-      <Container maxWidth="lg" sx={{ flex: 1, py: 4 }}>
+      <Box component="main" sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <Outlet />
-      </Container>
-      <Box component="footer" py={3} textAlign="center">
-        <Typography variant="body2" color="text.secondary">
-          © {new Date().getFullYear()} ShopSphere. All rights reserved.
-        </Typography>
       </Box>
+      <SiteFooter />
     </Box>
   );
 };

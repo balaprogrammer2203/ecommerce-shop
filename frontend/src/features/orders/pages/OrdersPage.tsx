@@ -22,8 +22,8 @@ export const OrdersPage = () => {
                 <Stack spacing={0.5}>
                   <Typography fontWeight={600}>Order #{order._id.slice(-6)}</Typography>
                   <Typography color="text.secondary">
-                    Total: ${order.totalPrice.toFixed(2)} • Paid: {order.isPaid ? 'Yes' : 'No'} • Delivered:{' '}
-                    {order.isDelivered ? 'Yes' : 'No'}
+                    Total: ${order.totalPrice.toFixed(2)} • Paid: {order.isPaid ? 'Yes' : 'No'} •
+                    Delivered: {order.isDelivered ? 'Yes' : 'No'}
                   </Typography>
                   <Typography color="text.secondary">
                     Placed: {new Date(order.createdAt).toLocaleString()}
