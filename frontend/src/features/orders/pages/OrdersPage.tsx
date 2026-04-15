@@ -1,43 +1,47 @@
-import { Alert, CircularProgress, Paper, Stack, Typography } from '@mui/material';
-
 import { useMyOrdersQuery } from '../api/ordersApi';
 
 export const OrdersPage = () => {
   const { data, isLoading, isError } = useMyOrdersQuery();
 
   return (
-    <Stack spacing={2}>
-      <Typography variant="h5" fontWeight={600}>
-        Recent orders
-      </Typography>
+    <div className="flex flex-col gap-4">
+      <h2 className="text-xl font-semibold text-slate-900">Recent orders</h2>
       {isLoading ? (
-        <CircularProgress />
+        <span className="size-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
       ) : isError ? (
-        <Alert severity="error">Failed to load orders.</Alert>
+        <div
+          role="alert"
+          className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-900"
+        >
+          Failed to load orders.
+        </div>
       ) : (
-        <Stack spacing={2}>
+        <div className="flex flex-col gap-3">
           {data && data.length > 0 ? (
             data.map((order) => (
-              <Paper key={order._id} variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
-                <Stack spacing={0.5}>
-                  <Typography fontWeight={600}>Order #{order._id.slice(-6)}</Typography>
-                  <Typography color="text.secondary">
+              <article
+                key={order._id}
+                className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+              >
+                <div className="flex flex-col gap-0.5 text-sm">
+                  <p className="font-semibold text-slate-900">Order #{order._id.slice(-6)}</p>
+                  <p className="text-slate-600">
                     Total: ${order.totalPrice.toFixed(2)} • Paid: {order.isPaid ? 'Yes' : 'No'} •
                     Delivered: {order.isDelivered ? 'Yes' : 'No'}
-                  </Typography>
-                  <Typography color="text.secondary">
+                  </p>
+                  <p className="text-slate-600">
                     Placed: {new Date(order.createdAt).toLocaleString()}
-                  </Typography>
-                </Stack>
-              </Paper>
+                  </p>
+                </div>
+              </article>
             ))
           ) : (
-            <Paper variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
-              <Typography color="text.secondary">No orders yet.</Typography>
-            </Paper>
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <p className="text-slate-600">No orders yet.</p>
+            </div>
           )}
-        </Stack>
+        </div>
       )}
-    </Stack>
+    </div>
   );
 };

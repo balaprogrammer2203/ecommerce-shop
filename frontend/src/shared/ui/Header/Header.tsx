@@ -1,430 +1,332 @@
-import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined';
-import CloseIcon from '@mui/icons-material/Close';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import MenuIcon from '@mui/icons-material/Menu';
-import SearchIcon from '@mui/icons-material/Search';
-import ShoppingCartOutlinedIcon from '@mui/icons-material/ShoppingCartOutlined';
-import {
-  AppBar,
-  Box,
-  Button,
-  Collapse,
-  Divider,
-  Drawer,
-  Container,
-  IconButton,
-  InputBase,
-  List,
-  ListItemButton,
-  ListItemText,
-  Paper,
-  Toolbar,
-  Typography,
-} from '@mui/material';
-import { useTheme } from '@mui/material/styles';
-import useScrollTrigger from '@mui/material/useScrollTrigger';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 
+import { FALLBACK_MEGA_MENU_ITEMS } from './megaMenuFallbackData';
+import { MyntraMegaMenuPanel } from './MyntraMegaMenuPanel';
 import { useAuth } from '../../../features/auth/hooks/useAuth';
+import { useMegaMenuQuery } from '../../../features/catalog/api/catalogApi';
+import { cn } from '../../lib/cn';
 import {
-  fetchActiveCategoryTree,
-  type BackendCategoryTreeNode,
-} from '../../lib/categoryTreeClient';
-import { CategoryMenu } from '../CategoryMenu';
+  IconAccount,
+  IconClose,
+  IconExpandLess,
+  IconExpandMore,
+  IconFavoriteBorder,
+  IconMenu,
+  IconSearch,
+  IconShoppingBag,
+} from '../icons/storefront';
 
 type HeaderProps = {
   showCategories?: boolean;
 };
 
 export const Header = ({ showCategories = true }: HeaderProps) => {
-  const theme = useTheme();
-  const primary = theme.palette.primary.main;
-  const scrolled = useScrollTrigger({ disableHysteresis: true, threshold: 6 });
-  const { isAuthenticated, user } = useAuth();
+  const primary = 'var(--color-primary)';
+  const [scrolled, setScrolled] = useState(false);
+  const { isAuthenticated } = useAuth();
 
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [openCategory, setOpenCategory] = useState<string | null>(null);
-  const [openSubcategory, setOpenSubcategory] = useState<string | null>(null);
-  const [drawerTree, setDrawerTree] = useState<BackendCategoryTreeNode[] | null>(null);
+  const [mobileOpenId, setMobileOpenId] = useState<string | null>(null);
+  const [openDesktopId, setOpenDesktopId] = useState<string | null>(null);
+  const closeTimerRef = useRef<number | null>(null);
+
+  const { data: megaMenuData } = useMegaMenuQuery();
+  const navItems = useMemo(
+    () => (megaMenuData?.items?.length ? megaMenuData.items : FALLBACK_MEGA_MENU_ITEMS),
+    [megaMenuData?.items],
+  );
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 6);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  useEffect(() => {
+    if (!drawerOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [drawerOpen]);
+
+  const cancelScheduledClose = useCallback(() => {
+    if (closeTimerRef.current != null) {
+      window.clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+  }, []);
+
+  const scheduleCloseDesktop = useCallback(() => {
+    cancelScheduledClose();
+    closeTimerRef.current = window.setTimeout(() => {
+      setOpenDesktopId(null);
+      closeTimerRef.current = null;
+    }, 140);
+  }, [cancelScheduledClose]);
+
+  const activeDesktopItem = useMemo(
+    () => navItems.find((i) => i.id === openDesktopId) ?? null,
+    [navItems, openDesktopId],
+  );
 
   const resetDrawerNavigation = () => {
     setDrawerOpen(false);
-    setOpenCategory(null);
-    setOpenSubcategory(null);
+    setMobileOpenId(null);
   };
-
-  const drawerCategories = useMemo(() => drawerTree ?? [], [drawerTree]);
-
-  // Mobile drawer uses the same backend category tree (roots -> L2 -> L3 links).
-  useEffect(() => {
-    if (!showCategories) return;
-    if (drawerTree !== null) return;
-
-    let mounted = true;
-    fetchActiveCategoryTree()
-      .then((data) => {
-        if (!mounted) return;
-        setDrawerTree(data);
-      })
-      .catch(() => {
-        if (!mounted) return;
-        setDrawerTree([]);
-      });
-
-    return () => {
-      mounted = false;
-    };
-  }, [drawerTree, showCategories]);
 
   const openDrawer = () => {
     setDrawerOpen(true);
-    setOpenCategory(null);
-    setOpenSubcategory(null);
+    setMobileOpenId(null);
   };
 
   return (
     <>
-      <AppBar
-        position="sticky"
-        elevation={scrolled ? 4 : 0}
-        sx={{
-          top: 0,
-          zIndex: (t) => t.zIndex.appBar,
-          bgcolor: primary,
-          transition: (t) =>
-            t.transitions.create('box-shadow', { duration: t.transitions.duration.short }),
-        }}
+      <header
+        className={cn(
+          'sticky top-0 z-[1200] border-b border-slate-200 bg-white transition-shadow duration-200',
+          scrolled && 'shadow-[0_2px_10px_rgba(15,23,42,0.08)]',
+        )}
+        onMouseLeave={showCategories ? scheduleCloseDesktop : undefined}
       >
-        <Container maxWidth="lg">
-          <Toolbar sx={{ gap: 2, minHeight: { xs: 56, sm: 60, md: 64 } }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
-              {showCategories ? (
-                <IconButton
-                  size="large"
-                  onClick={openDrawer}
-                  sx={{ color: '#fff', display: { xs: 'inline-flex', sm: 'none' } }}
-                  aria-label="open navigation menu"
-                >
-                  <MenuIcon />
-                </IconButton>
-              ) : null}
+        <div className="mx-auto max-w-screen-lg px-4 sm:px-6">
+          <div className="flex min-h-14 items-center gap-4 md:min-h-16">
+            {showCategories ? (
+              <button
+                type="button"
+                className="inline-flex text-slate-900 md:hidden"
+                aria-label="Open menu"
+                onClick={openDrawer}
+              >
+                <IconMenu size={26} />
+              </button>
+            ) : null}
 
-              <Box sx={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
-                <Typography
-                  component={RouterLink}
+            <RouterLink to="/" className="flex items-center text-inherit no-underline">
+              <span className="text-lg font-black tracking-wide text-slate-900">ShopSphere</span>
+            </RouterLink>
+
+            {showCategories ? (
+              <nav
+                aria-label="Main categories"
+                role="menubar"
+                className="mx-1 hidden flex-1 items-center justify-center gap-0.5 md:flex"
+                onMouseEnter={cancelScheduledClose}
+              >
+                {navItems.map((item) => {
+                  const panelId = `mega-${item.id}`;
+                  const isOpen = openDesktopId === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      id={`nav-${item.id}`}
+                      type="button"
+                      role="menuitem"
+                      aria-haspopup="true"
+                      aria-expanded={isOpen}
+                      aria-controls={panelId}
+                      onMouseEnter={() => {
+                        cancelScheduledClose();
+                        setOpenDesktopId(item.id);
+                      }}
+                      onFocus={() => {
+                        cancelScheduledClose();
+                        setOpenDesktopId(item.id);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Escape') {
+                          e.preventDefault();
+                          setOpenDesktopId(null);
+                        }
+                      }}
+                      style={{ borderBottomColor: isOpen ? primary : 'transparent' }}
+                      className={cn(
+                        'min-w-0 border-b-[3px] border-transparent px-2 py-2 text-xs font-extrabold uppercase tracking-wide text-slate-900 transition-colors hover:text-primary',
+                        isOpen && 'text-primary',
+                      )}
+                    >
+                      {item.label}
+                    </button>
+                  );
+                })}
+              </nav>
+            ) : (
+              <div className="flex-1" />
+            )}
+
+            <div className="ml-auto flex items-center gap-0.5">
+              <button
+                type="button"
+                className="rounded-lg p-2 text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                aria-label="Search"
+              >
+                <IconSearch />
+              </button>
+              <RouterLink
+                to="/wishlist"
+                className="hidden rounded-lg p-2 text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:inline-flex"
+                aria-label="Wishlist"
+              >
+                <IconFavoriteBorder />
+              </RouterLink>
+              <RouterLink
+                to="/cart"
+                className="rounded-lg p-2 text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                aria-label="Shopping bag"
+              >
+                <IconShoppingBag />
+              </RouterLink>
+              <RouterLink
+                to={isAuthenticated ? '/account/orders' : '/login'}
+                className="rounded-lg p-2 text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                aria-label={isAuthenticated ? 'Profile' : 'Login'}
+              >
+                <IconAccount />
+              </RouterLink>
+            </div>
+          </div>
+        </div>
+
+        {showCategories && activeDesktopItem ? (
+          <div
+            role="presentation"
+            onMouseEnter={cancelScheduledClose}
+            onFocusCapture={cancelScheduledClose}
+            className={cn(
+              'border-t border-slate-200 bg-white shadow-[0_18px_36px_rgba(15,23,42,0.12)] transition-all duration-150',
+              openDesktopId
+                ? 'pointer-events-auto translate-y-0 opacity-100'
+                : 'pointer-events-none -translate-y-1.5 opacity-0',
+            )}
+          >
+            <MyntraMegaMenuPanel
+              item={activeDesktopItem}
+              panelId={`mega-${activeDesktopItem.id}`}
+              onNavigate={() => setOpenDesktopId(null)}
+            />
+          </div>
+        ) : null}
+      </header>
+
+      {drawerOpen ? (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/45"
+            aria-label="Close menu backdrop"
+            onClick={resetDrawerNavigation}
+          />
+          <div className="absolute left-0 top-0 flex h-full w-[min(380px,92vw)] max-w-full flex-col overflow-y-auto bg-white shadow-2xl">
+            <div className="flex flex-col gap-4 p-4">
+              <div className="flex items-center justify-between">
+                <RouterLink
                   to="/"
-                  variant="h6"
-                  fontWeight={800}
-                  sx={{ color: '#fff', textDecoration: 'none', letterSpacing: 0.2 }}
+                  className="text-lg font-black tracking-wide text-slate-900 no-underline"
+                  onClick={resetDrawerNavigation}
                 >
                   ShopSphere
-                </Typography>
-                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.85)', mt: -0.5 }}>
-                  Explore Plus
-                </Typography>
-              </Box>
-            </Box>
-
-            <Paper
-              elevation={0}
-              sx={{
-                flex: 1,
-                alignItems: 'center',
-                px: 1.5,
-                py: 0.5,
-                borderRadius: 1,
-                maxWidth: { sm: 560, md: 640 },
-                display: { xs: 'none', sm: 'flex' },
-              }}
-            >
-              <InputBase
-                placeholder="Search for products, brands and more"
-                sx={{ ml: 1, flex: 1, fontSize: 14 }}
-                inputProps={{ 'aria-label': 'search' }}
-              />
-              <IconButton size="small" sx={{ color: primary }} aria-label="search">
-                <SearchIcon />
-              </IconButton>
-            </Paper>
-
-            <Box
-              sx={{
-                ml: 'auto',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1,
-              }}
-            >
-              <IconButton
-                onClick={openDrawer}
-                sx={{
-                  color: '#fff',
-                  display: { xs: 'inline-flex', sm: 'none' },
-                  '&:hover': { bgcolor: 'rgba(255,255,255,0.12)' },
-                }}
-                aria-label="open search"
-              >
-                <SearchIcon />
-              </IconButton>
-
-              <IconButton
-                component={RouterLink}
-                to={isAuthenticated ? '/account/orders' : '/login'}
-                sx={{
-                  color: '#fff',
-                  display: { xs: 'inline-flex', sm: 'none' },
-                  '&:hover': { bgcolor: 'rgba(255,255,255,0.12)' },
-                }}
-                aria-label={isAuthenticated ? 'my account' : 'login'}
-              >
-                <AccountCircleOutlinedIcon />
-              </IconButton>
-
-              <IconButton
-                component={RouterLink}
-                to="/cart"
-                sx={{
-                  color: '#fff',
-                  display: { xs: 'inline-flex', sm: 'none' },
-                  '&:hover': { bgcolor: 'rgba(255,255,255,0.12)' },
-                }}
-                aria-label="cart"
-              >
-                <ShoppingCartOutlinedIcon />
-              </IconButton>
-
-              {isAuthenticated ? (
-                <Button
-                  component={RouterLink}
-                  to="/account/orders"
-                  variant="contained"
-                  disableElevation
-                  sx={{
-                    display: { xs: 'none', sm: 'inline-flex' },
-                    bgcolor: '#fff',
-                    color: primary,
-                    fontWeight: 700,
-                    px: 2,
-                    maxWidth: 200,
-                    '&:hover': { bgcolor: 'rgba(255,255,255,0.92)' },
-                  }}
-                  startIcon={<AccountCircleOutlinedIcon />}
+                </RouterLink>
+                <button
+                  type="button"
+                  onClick={resetDrawerNavigation}
+                  aria-label="Close menu"
+                  className="rounded-lg p-2 text-slate-700"
                 >
-                  <Box component="span" sx={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {user?.name?.split(' ')[0] ?? 'Account'}
-                  </Box>
-                </Button>
-              ) : (
-                <Button
-                  component={RouterLink}
-                  to="/login"
-                  variant="contained"
-                  disableElevation
-                  sx={{
-                    display: { xs: 'none', sm: 'inline-flex' },
-                    bgcolor: '#fff',
-                    color: primary,
-                    fontWeight: 700,
-                    px: 3,
-                    '&:hover': { bgcolor: 'rgba(255,255,255,0.92)' },
-                  }}
+                  <IconClose />
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2 rounded-lg border border-slate-200 px-2 py-1">
+                <input
+                  className="min-w-0 flex-1 border-0 bg-transparent py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400"
+                  placeholder="Search brands and products"
+                  aria-label="Search"
+                />
+                <button type="button" className="text-primary" aria-label="Search submit">
+                  <IconSearch size={22} />
+                </button>
+              </div>
+
+              <hr className="border-slate-200" />
+
+              {showCategories ? (
+                <ul className="list-none p-0" aria-label="Mobile categories">
+                  {navItems.map((item) => {
+                    const open = mobileOpenId === item.id;
+                    return (
+                      <li key={item.id} className="border-b border-slate-100 last:border-0">
+                        <button
+                          type="button"
+                          className="flex w-full items-center justify-between py-3 text-left"
+                          onClick={() => setMobileOpenId(open ? null : item.id)}
+                        >
+                          <span className="text-[13px] font-black uppercase tracking-wide text-slate-900">
+                            {item.label}
+                          </span>
+                          {open ? <IconExpandLess /> : <IconExpandMore />}
+                        </button>
+                        {open ? (
+                          <div className="pb-2 pl-1">
+                            {item.columns.map((col) => (
+                              <div key={`${item.id}-${col.title}`} className="py-2 pl-2">
+                                <p className="mb-1 text-[10px] font-black uppercase tracking-wider text-slate-900">
+                                  {col.title}
+                                </p>
+                                <ul className="list-none space-y-0.5 p-0">
+                                  {col.links.map((link) => (
+                                    <li key={`${col.title}-${link.label}`}>
+                                      <RouterLink
+                                        to={link.href}
+                                        className="block py-1.5 pl-2 text-[13px] text-slate-600 no-underline hover:text-primary"
+                                        onClick={resetDrawerNavigation}
+                                      >
+                                        {link.label}
+                                      </RouterLink>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            ))}
+                          </div>
+                        ) : null}
+                      </li>
+                    );
+                  })}
+                </ul>
+              ) : null}
+
+              <hr className="border-slate-200" />
+
+              <nav className="flex flex-col">
+                <RouterLink
+                  to="/wishlist"
+                  className="py-2.5 text-slate-800 no-underline hover:text-primary"
+                  onClick={resetDrawerNavigation}
                 >
-                  Login
-                </Button>
-              )}
-
-              <Button
-                component={RouterLink}
-                to="/cart"
-                startIcon={<ShoppingCartOutlinedIcon />}
-                sx={{
-                  display: { xs: 'none', sm: 'inline-flex' },
-                  color: '#fff',
-                  fontWeight: 700,
-                  textTransform: 'none',
-                  '&:hover': { bgcolor: 'rgba(255,255,255,0.08)' },
-                }}
-              >
-                Cart
-              </Button>
-            </Box>
-          </Toolbar>
-        </Container>
-      </AppBar>
-
-      {showCategories ? (
-        <Box
-          sx={{
-            display: { xs: 'none', sm: 'block' },
-            bgcolor: '#fff',
-            borderBottom: '1px solid',
-            borderColor: 'divider',
-          }}
-        >
-          <Container maxWidth="lg" sx={{ py: 1 }}>
-            <CategoryMenu variant="light" />
-          </Container>
-        </Box>
+                  Wishlist
+                </RouterLink>
+                <RouterLink
+                  to={isAuthenticated ? '/account/orders' : '/login'}
+                  className="py-2.5 text-slate-800 no-underline hover:text-primary"
+                  onClick={resetDrawerNavigation}
+                >
+                  {isAuthenticated ? 'Profile' : 'Login'}
+                </RouterLink>
+                <RouterLink
+                  to="/cart"
+                  className="py-2.5 text-slate-800 no-underline hover:text-primary"
+                  onClick={resetDrawerNavigation}
+                >
+                  Bag
+                </RouterLink>
+              </nav>
+            </div>
+          </div>
+        </div>
       ) : null}
-
-      <Drawer
-        anchor="left"
-        open={drawerOpen}
-        onClose={resetDrawerNavigation}
-        ModalProps={{ keepMounted: true }}
-        PaperProps={{
-          sx: {
-            width: 360,
-            maxWidth: '90vw',
-            borderRight: '1px solid',
-            borderColor: 'divider',
-          },
-        }}
-      >
-        <Box sx={{ p: 2 }}>
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              mb: 2,
-            }}
-          >
-            <Box sx={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
-              <Typography
-                component={RouterLink}
-                to="/"
-                variant="h6"
-                fontWeight={800}
-                sx={{ color: 'text.primary', textDecoration: 'none', letterSpacing: 0.2 }}
-              >
-                ShopSphere
-              </Typography>
-              <Typography variant="caption" sx={{ color: 'text.secondary', mt: -0.5 }}>
-                Explore Plus
-              </Typography>
-            </Box>
-
-            <IconButton onClick={resetDrawerNavigation} aria-label="close navigation menu">
-              <CloseIcon />
-            </IconButton>
-          </Box>
-
-          <Paper
-            elevation={0}
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              px: 1.5,
-              py: 0.5,
-              borderRadius: 2,
-              border: '1px solid',
-              borderColor: 'divider',
-              bgcolor: 'background.paper',
-              mb: 2,
-            }}
-          >
-            <InputBase
-              placeholder="Search for products..."
-              sx={{ ml: 1, flex: 1, fontSize: 14 }}
-              inputProps={{ 'aria-label': 'mobile search' }}
-            />
-            <IconButton size="small" sx={{ color: primary }} aria-label="mobile search">
-              <SearchIcon />
-            </IconButton>
-          </Paper>
-
-          <Divider sx={{ my: 2 }} />
-
-          <List disablePadding>
-            {drawerCategories.map((cat) => {
-              const catId = cat._id;
-              const catOpen = openCategory === catId;
-              const catChildren = cat.children ?? [];
-
-              return (
-                <Box key={catId}>
-                  <ListItemButton
-                    onClick={() => {
-                      setOpenCategory(catOpen ? null : catId);
-                      setOpenSubcategory(null);
-                    }}
-                    sx={{ px: 2, py: 1 }}
-                  >
-                    <ListItemText primary={cat.name} primaryTypographyProps={{ fontWeight: 700 }} />
-                    {catOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                  </ListItemButton>
-
-                  <Collapse in={catOpen} timeout="auto" unmountOnExit>
-                    <Box sx={{ pl: 2 }}>
-                      {catChildren.map((sub) => {
-                        const subId = sub._id;
-                        const subOpen = openSubcategory === subId;
-                        const l3 = sub.children ?? [];
-                        const leaves = l3.length ? l3 : [sub];
-
-                        return (
-                          <Box key={subId}>
-                            <ListItemButton
-                              onClick={() => setOpenSubcategory(subOpen ? null : subId)}
-                              sx={{ px: 2, py: 0.75 }}
-                            >
-                              <ListItemText
-                                primary={sub.name}
-                                primaryTypographyProps={{ fontWeight: 650 }}
-                              />
-                              {subOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                            </ListItemButton>
-
-                            <Collapse in={subOpen} timeout="auto" unmountOnExit>
-                              <List disablePadding>
-                                {leaves.map((leaf) => (
-                                  <ListItemButton
-                                    key={leaf._id}
-                                    component={RouterLink}
-                                    to={`/category/${leaf.slug}`}
-                                    onClick={resetDrawerNavigation}
-                                    sx={{ px: 2, py: 0.75, pl: 4 }}
-                                  >
-                                    <ListItemText primary={leaf.name} />
-                                  </ListItemButton>
-                                ))}
-                              </List>
-                            </Collapse>
-                          </Box>
-                        );
-                      })}
-                    </Box>
-                  </Collapse>
-                </Box>
-              );
-            })}
-          </List>
-
-          <Divider sx={{ my: 2 }} />
-
-          <List disablePadding>
-            <ListItemButton
-              component={RouterLink}
-              to={isAuthenticated ? '/account/orders' : '/login'}
-              onClick={resetDrawerNavigation}
-              sx={{ px: 2, py: 1 }}
-            >
-              <ListItemText primary={isAuthenticated ? 'My account' : 'Login'} />
-            </ListItemButton>
-            <ListItemButton
-              component={RouterLink}
-              to="/cart"
-              onClick={resetDrawerNavigation}
-              sx={{ px: 2, py: 1 }}
-            >
-              <ListItemText primary="Cart" />
-            </ListItemButton>
-          </List>
-        </Box>
-      </Drawer>
     </>
   );
 };

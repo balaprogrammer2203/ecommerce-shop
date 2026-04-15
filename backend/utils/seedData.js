@@ -6,11 +6,13 @@ const connectDB = require('../config/db');
 
 const User = require('../models/User');
 const Category = require('../models/Category');
+const MegaMenu = require('../models/MegaMenu');
 const Product = require('../models/Product');
 const Review = require('../models/Review');
 const Cart = require('../models/Cart');
 const Order = require('../models/Order');
 const { CATEGORY_TREE } = require('./categorySeedTree');
+const { MEGA_MENU_ITEMS } = require('./megaMenuSeed');
 const { buildCategorySnapshot } = require('../services/categoryHierarchyService');
 const CategoryAttribute = require('../models/CategoryAttribute');
 
@@ -273,6 +275,12 @@ const main = async () => {
   for (const root of CATEGORY_TREE) {
     await upsertCategoryNode(root, null, categoryDocs);
   }
+
+  await MegaMenu.findOneAndUpdate(
+    { key: 'default' },
+    { $set: { items: MEGA_MENU_ITEMS } },
+    { upsert: true, new: true },
+  );
 
   const productDocs = {};
   for (const p of SEED.products) {

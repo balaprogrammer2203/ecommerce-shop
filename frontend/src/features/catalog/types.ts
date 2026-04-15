@@ -1,3 +1,9 @@
+import type { MyntraNavItem } from '../../shared/ui/Header/myntraNavConfig';
+
+export type MegaMenuResponse = {
+  items: MyntraNavItem[];
+};
+
 export type ProductCategorySnapshot = {
   _id: string;
   slug: string;

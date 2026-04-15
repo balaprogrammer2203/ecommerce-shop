@@ -1,20 +1,9 @@
-import FavoriteIcon from '@mui/icons-material/Favorite';
-import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
-import {
-  Box,
-  Card,
-  CardActions,
-  CardContent,
-  IconButton,
-  Link,
-  Rating,
-  Stack,
-  Typography,
-} from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 
 import type { Product } from '../../../features/catalog/types';
 import { useProductWishlist } from '../../../features/wishlist/hooks/useProductWishlist';
+import { cn } from '../../lib/cn';
+import { IconFavoriteBorder, IconFavoriteFilled } from '../icons/storefront';
 import { Badge } from '../system/Badge';
 import { Button } from '../system/Button';
 
@@ -27,13 +16,28 @@ function getDiscountLabel(product: Product): string | null {
   return null;
 }
 
+function StarRating({ value, compact }: { value: number; compact?: boolean }) {
+  const rounded = Math.round(value);
+  return (
+    <div
+      className={cn('flex gap-0.5 text-amber-500', compact ? 'text-sm' : 'text-base')}
+      role="img"
+      aria-label={`Rating ${value} out of 5`}
+    >
+      {[1, 2, 3, 4, 5].map((i) => (
+        <span key={i} className={i <= rounded ? 'text-amber-500' : 'text-slate-200'}>
+          ★
+        </span>
+      ))}
+    </div>
+  );
+}
+
 type ProductCardProps = {
   product: Product;
-  /** Compact layout for carousels */
   variant?: 'default' | 'compact';
   onAddToCart?: () => void;
   addToCartLoading?: boolean;
-  /** Hide wishlist control (e.g. admin previews) */
   hideWishlist?: boolean;
 };
 
@@ -76,172 +80,86 @@ export const ProductCard = ({
   const placeholder = product.image || 'https://placehold.co/400x300/CCCCCC/666666?text=Product';
 
   return (
-    <Card
-      elevation={0}
-      sx={{
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        borderRadius: 2,
-        border: '1px solid',
-        borderColor: 'divider',
-        overflow: 'hidden',
-        transition: 'transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease',
-        '&:hover': {
-          transform: 'translateY(-6px)',
-          boxShadow: (t) => t.shadows[8],
-          borderColor: 'primary.light',
-          '& .product-card__media img': {
-            transform: 'scale(1.06)',
-          },
-        },
-      }}
+    <div
+      className={cn(
+        'group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white',
+        'transition-all duration-300 hover:-translate-y-1.5 hover:border-primary/30 hover:shadow-xl',
+      )}
     >
-      <Box sx={{ position: 'relative', overflow: 'hidden', bgcolor: 'grey.100' }}>
+      <div className="relative overflow-hidden bg-slate-100">
         {discountLabel ? (
-          <Box
-            sx={{
-              position: 'absolute',
-              top: 10,
-              left: 10,
-              zIndex: 2,
-              pointerEvents: 'none',
-            }}
-          >
-            <Badge tone="sale" label={discountLabel} size="small" sx={{ fontWeight: 800 }} />
-          </Box>
+          <div className="pointer-events-none absolute left-2.5 top-2.5 z-[2]">
+            <Badge tone="sale" label={discountLabel} />
+          </div>
         ) : null}
 
         {!hideWishlist ? (
-          <IconButton
+          <button
+            type="button"
             aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
             aria-pressed={isWishlisted}
             onClick={handleWishlistClick}
             disabled={wishlistBusy}
-            size="small"
-            sx={{
-              position: 'absolute',
-              top: 8,
-              right: 8,
-              zIndex: 2,
-              bgcolor: 'background.paper',
-              boxShadow: 1,
-              '&:hover': { bgcolor: 'background.paper', transform: 'scale(1.06)' },
-              transition: 'transform 0.2s ease, background-color 0.2s ease',
-            }}
+            className={cn(
+              'absolute right-2 top-2 z-[2] rounded-full bg-white/95 p-1.5 shadow-md transition-transform hover:scale-105 hover:bg-white',
+              isWishlisted && 'text-red-600',
+            )}
           >
             {isWishlisted ? (
-              <FavoriteIcon fontSize={isCompact ? 'small' : 'medium'} color="error" />
+              <IconFavoriteFilled size={isCompact ? 20 : 22} />
             ) : (
-              <FavoriteBorderIcon fontSize={isCompact ? 'small' : 'medium'} color="action" />
+              <IconFavoriteBorder size={isCompact ? 20 : 22} className="text-slate-600" />
             )}
-          </IconButton>
+          </button>
         ) : null}
 
-        <Box
-          component={RouterLink}
+        <RouterLink
           to={productHref}
-          className="product-card__media"
+          className="product-card__media block text-inherit no-underline"
+          style={{ height: imageHeight }}
           aria-label={`View ${displayName}`}
-          sx={{
-            display: 'block',
-            height: imageHeight,
-            overflow: 'hidden',
-            textDecoration: 'none',
-            color: 'inherit',
-          }}
         >
-          <Box
-            component="img"
+          <img
             src={placeholder}
             alt={displayName}
             loading="lazy"
             referrerPolicy="no-referrer"
-            sx={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              display: 'block',
-              transition: 'transform 0.4s ease',
-            }}
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.06]"
           />
-        </Box>
-      </Box>
+        </RouterLink>
+      </div>
 
-      <CardContent sx={{ flex: 1, pt: 1.5, display: 'flex', flexDirection: 'column', gap: 0.75 }}>
-        <Link
-          component={RouterLink}
+      <div className="flex flex-1 flex-col gap-2 px-4 pb-2 pt-3">
+        <RouterLink
           to={productHref}
-          underline="hover"
-          color="inherit"
-          variant={isCompact ? 'subtitle1' : 'h6'}
-          sx={{
-            fontWeight: 700,
-            lineHeight: 1.3,
-            display: '-webkit-box',
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical',
-            overflow: 'hidden',
-            minHeight: isCompact ? 40 : 48,
-          }}
+          className={cn(
+            'line-clamp-2 min-h-[40px] font-bold text-slate-900 no-underline transition-colors hover:text-primary md:min-h-[48px]',
+            isCompact ? 'text-sm leading-snug' : 'text-base leading-snug md:text-lg',
+          )}
         >
           {displayName}
-        </Link>
+        </RouterLink>
 
-        <Stack direction="row" alignItems="center" spacing={0.75} flexWrap="wrap">
-          <Rating
-            name={`rating-${product._id}`}
-            value={rating}
-            precision={0.5}
-            readOnly
-            size={isCompact ? 'small' : 'medium'}
-            sx={{ color: 'warning.main' }}
-          />
-          <Typography variant="caption" color="text.secondary" component="span">
-            ({reviewCount})
-          </Typography>
-        </Stack>
+        <div className="flex flex-wrap items-center gap-1.5">
+          <StarRating value={rating} compact={isCompact} />
+          <span className="text-xs text-slate-500">({reviewCount})</span>
+        </div>
 
         {!isCompact ? (
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={{
-              display: '-webkit-box',
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: 'vertical',
-              overflow: 'hidden',
-              minHeight: 40,
-            }}
-          >
-            {product.description}
-          </Typography>
+          <p className="line-clamp-2 min-h-[40px] text-sm text-slate-600">{product.description}</p>
         ) : null}
 
-        <Stack
-          direction="row"
-          alignItems="baseline"
-          spacing={1}
-          flexWrap="wrap"
-          sx={{ mt: 'auto' }}
-        >
-          <Typography variant="h6" fontWeight={800} color="primary.main" component="span">
-            ${product.price.toFixed(2)}
-          </Typography>
+        <div className="mt-auto flex flex-wrap items-baseline gap-2">
+          <span className="text-lg font-extrabold text-primary">${product.price.toFixed(2)}</span>
           {showStrikePrice && product.originalPrice != null ? (
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              sx={{ textDecoration: 'line-through' }}
-              component="span"
-            >
+            <span className="text-sm text-slate-500 line-through">
               ${product.originalPrice.toFixed(2)}
-            </Typography>
+            </span>
           ) : null}
-        </Stack>
-      </CardContent>
+        </div>
+      </div>
 
-      <CardActions sx={{ px: 2, pb: 2, pt: 0, flexDirection: 'column', gap: 1 }}>
+      <div className="flex flex-col gap-2 px-4 pb-4 pt-0">
         {onAddToCart ? (
           <Button
             shopVariant="primary"
@@ -264,7 +182,7 @@ export const ProductCard = ({
             View details
           </Button>
         ) : null}
-      </CardActions>
-    </Card>
+      </div>
+    </div>
   );
 };

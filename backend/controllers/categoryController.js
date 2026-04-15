@@ -1,8 +1,10 @@
 const mongoose = require('mongoose');
 
 const Category = require('../models/Category');
+const MegaMenu = require('../models/MegaMenu');
 const AppError = require('../utils/AppError');
 const asyncHandler = require('../utils/asyncHandler');
+const { MEGA_MENU_ITEMS } = require('../utils/megaMenuSeed');
 const {
   refreshCategoryIsLeaf,
   resolveCategoryByIdOrSlug,
@@ -80,6 +82,56 @@ const getCategories = asyncHandler(async (req, res) => {
 /**
  * Nested tree for storefront / admin menus.
  */
+/**
+ * Storefront header mega-menu (Myntra-style). Links are validated against active categories.
+ */
+const getMegaMenu = asyncHandler(async (req, res) => {
+  const doc = await MegaMenu.findOne({ key: 'default' }).lean();
+  const rawItems = doc?.items?.length ? doc.items : MEGA_MENU_ITEMS;
+
+  const allSlugs = new Set();
+  for (const item of rawItems) {
+    for (const col of item.columns || []) {
+      for (const link of col.links || []) {
+        if (link.categorySlug) allSlugs.add(link.categorySlug);
+      }
+    }
+  }
+
+  const activeCats = await Category.find({
+    slug: { $in: [...allSlugs] },
+    isActive: true,
+  })
+    .select('slug')
+    .lean();
+  const validSlug = new Set(activeCats.map((c) => c.slug));
+
+  const items = rawItems
+    .map((item) => ({
+      id: item.id,
+      label: item.label,
+      sortOrder: item.sortOrder ?? 0,
+      columns: (item.columns || [])
+        .map((col) => ({
+          title: col.title,
+          links: (col.links || [])
+            .filter((link) => validSlug.has(link.categorySlug))
+            .map((link) => ({
+              label: link.label,
+              categorySlug: link.categorySlug,
+              href: `/category/${link.categorySlug}`,
+              badge: link.badge,
+            })),
+        }))
+        .filter((col) => col.links.length > 0),
+    }))
+    .filter((item) => item.columns.length > 0);
+
+  items.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+
+  return res.json({ items });
+});
+
 const getCategoryTree = asyncHandler(async (req, res) => {
   const filter = activeFilterFromQuery(req.query.active);
 
@@ -250,6 +302,7 @@ const deleteCategory = asyncHandler(async (req, res) => {
 
 module.exports = {
   getCategories,
+  getMegaMenu,
   getCategoryTree,
   getCategoryBreadcrumbs,
   getCategoryById,

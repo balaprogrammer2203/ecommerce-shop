@@ -1,12 +1,3 @@
-import {
-  Box,
-  Breadcrumbs,
-  CircularProgress,
-  Container,
-  Link,
-  Stack,
-  Typography,
-} from '@mui/material';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link as RouterLink, Navigate, useParams } from 'react-router-dom';
 
@@ -75,62 +66,48 @@ export const CategoryPage = () => {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: { xs: 3, md: 4 }, px: { xs: 2, sm: 3 } }}>
-      <Breadcrumbs sx={{ mb: 2 }} aria-label="breadcrumb">
-        <Link component={RouterLink} to="/" underline="hover" color="inherit" variant="body2">
-          Home
-        </Link>
-        <Typography color="text.primary" variant="body2" fontWeight={600}>
-          {categoryTitle ?? ''}
-        </Typography>
-      </Breadcrumbs>
+    <div className="mx-auto max-w-screen-lg px-4 py-8 sm:px-6 md:py-10">
+      <nav className="mb-4 text-sm" aria-label="breadcrumb">
+        <ol className="flex flex-wrap items-center gap-2 text-slate-600">
+          <li>
+            <RouterLink to="/" className="text-primary no-underline hover:underline">
+              Home
+            </RouterLink>
+          </li>
+          <li aria-hidden className="text-slate-400">
+            /
+          </li>
+          <li className="font-semibold text-slate-900" aria-current="page">
+            {categoryTitle ?? ''}
+          </li>
+        </ol>
+      </nav>
 
-      <Typography variant="h4" component="h1" fontWeight={800} sx={{ mb: 1 }}>
+      <h1 className="mb-1 text-3xl font-extrabold tracking-tight text-slate-900 md:text-4xl">
         {categoryTitle ?? ''}
-      </Typography>
+      </h1>
 
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+      <p className="mb-6 text-sm text-slate-600">
         {products.length} product{products.length === 1 ? '' : 's'} in this category
-      </Typography>
+      </p>
 
       {isLoading || !categoryTitle ? (
-        <Stack alignItems="center" py={6}>
-          <CircularProgress />
-        </Stack>
+        <div className="flex justify-center py-14">
+          <span className="size-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        </div>
       ) : isError ? (
-        <Typography color="error">Could not load products. Try again later.</Typography>
+        <p className="text-red-600">Could not load products. Try again later.</p>
       ) : products.length === 0 ? (
-        <Box
-          sx={{
-            py: 6,
-            px: 2,
-            textAlign: 'center',
-            borderRadius: 2,
-            border: '1px dashed',
-            borderColor: 'divider',
-            bgcolor: 'grey.50',
-          }}
-        >
-          <Typography color="text.secondary">
+        <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-14 text-center">
+          <p className="text-slate-600">
             No products in this category yet.{' '}
-            <Link component={RouterLink} to="/" underline="hover">
+            <RouterLink to="/" className="font-medium text-primary no-underline hover:underline">
               Continue shopping
-            </Link>
-          </Typography>
-        </Box>
+            </RouterLink>
+          </p>
+        </div>
       ) : (
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: {
-              xs: '1fr',
-              sm: 'repeat(2, 1fr)',
-              md: 'repeat(3, 1fr)',
-              lg: 'repeat(4, 1fr)',
-            },
-            gap: { xs: 2, md: 2.5 },
-          }}
-        >
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 md:gap-6 lg:grid-cols-4">
           {products.map((product) => (
             <ProductCard
               key={product._id}
@@ -139,8 +116,8 @@ export const CategoryPage = () => {
               addToCartLoading={addingProductId === product._id}
             />
           ))}
-        </Box>
+        </div>
       )}
-    </Container>
+    </div>
   );
 };

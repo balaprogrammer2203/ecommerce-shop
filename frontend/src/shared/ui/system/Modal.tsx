@@ -1,29 +1,28 @@
-import CloseIcon from '@mui/icons-material/Close';
-import {
-  Box,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  type DialogProps,
-  DialogTitle,
-  IconButton,
-  Stack,
-} from '@mui/material';
-import type { ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 
-export type ModalProps = Omit<DialogProps, 'open'> & {
+import { cn } from '../../lib/cn';
+
+const maxWidthCls: Record<string, string> = {
+  xs: 'max-w-xs',
+  sm: 'max-w-md',
+  md: 'max-w-lg',
+  lg: 'max-w-2xl',
+  xl: 'max-w-4xl',
+};
+
+export type ModalProps = {
   open: boolean;
   onClose: () => void;
   title?: ReactNode;
-  /** Primary / secondary actions row */
   footer?: ReactNode;
   showCloseButton?: boolean;
   children: ReactNode;
+  maxWidth?: keyof typeof maxWidthCls;
+  fullWidth?: boolean;
+  className?: string;
 };
 
-/**
- * Accessible dialog for confirmations, quick product view, or auth prompts.
- */
 export const Modal = ({
   open,
   onClose,
@@ -33,35 +32,83 @@ export const Modal = ({
   showCloseButton = true,
   maxWidth = 'sm',
   fullWidth = true,
-  ...rest
+  className,
 }: ModalProps) => {
-  const showHeader = title != null || showCloseButton;
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [open, onClose]);
 
-  return (
-    <Dialog open={open} onClose={onClose} maxWidth={maxWidth} fullWidth={fullWidth} {...rest}>
-      {showHeader ? (
-        <DialogTitle sx={{ pr: showCloseButton ? 6 : 2 }}>
-          <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
-            <Box component="span" sx={{ flex: 1, pr: showCloseButton ? 2 : 0 }}>
-              {title}
-            </Box>
+  if (!open) return null;
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[1400] flex items-center justify-center p-4"
+      role="presentation"
+    >
+      <button
+        type="button"
+        className="absolute inset-0 bg-slate-900/50 backdrop-blur-[2px]"
+        aria-label="Close overlay"
+        onClick={onClose}
+      />
+      <div
+        role="dialog"
+        aria-modal="true"
+        className={cn(
+          'relative z-[1] flex max-h-[90vh] w-full flex-col overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-slate-200/80',
+          maxWidthCls[maxWidth],
+          fullWidth && 'w-full',
+          className,
+        )}
+      >
+        {title != null || showCloseButton ? (
+          <div className="flex items-start gap-3 border-b border-slate-100 px-5 py-4 pr-12">
+            <div className="min-w-0 flex-1 text-lg font-semibold text-slate-900">{title}</div>
             {showCloseButton ? (
-              <IconButton
-                aria-label="Close dialog"
+              <button
+                type="button"
                 onClick={onClose}
-                size="small"
-                sx={{ position: 'absolute', right: 8, top: 8 }}
+                className="absolute right-3 top-3 rounded-lg p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                aria-label="Close dialog"
               >
-                <CloseIcon />
-              </IconButton>
+                <svg
+                  className="size-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  aria-hidden
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
             ) : null}
-          </Stack>
-        </DialogTitle>
-      ) : null}
+          </div>
+        ) : null}
 
-      <DialogContent dividers={showHeader}>{children}</DialogContent>
+        <div className="min-h-0 flex-1 overflow-auto px-5 py-4">{children}</div>
 
-      {footer != null ? <DialogActions sx={{ px: 3, py: 2 }}>{footer}</DialogActions> : null}
-    </Dialog>
+        {footer != null ? (
+          <div className="flex flex-wrap justify-end gap-2 border-t border-slate-100 px-5 py-3">
+            {footer}
+          </div>
+        ) : null}
+      </div>
+    </div>,
+    document.body,
   );
 };

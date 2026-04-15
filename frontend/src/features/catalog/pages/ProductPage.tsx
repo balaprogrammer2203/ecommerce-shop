@@ -1,16 +1,8 @@
-import {
-  Alert,
-  Box,
-  Button,
-  CircularProgress,
-  Container,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 
+import { Button } from '../../../shared/ui/system/Button';
+import { Input } from '../../../shared/ui/system/Input';
 import { useAddItemToCartMutation } from '../../cart/api/cartApi';
 import { useProductReviewsQuery, useSubmitReviewMutation } from '../../reviews/api/reviewsApi';
 import { useProductDetailQuery } from '../api/catalogApi';
@@ -44,72 +36,83 @@ export const ProductPage = () => {
       });
   };
 
-  const pageSx = { py: { xs: 2, md: 4 }, px: { xs: 2, sm: 3 } };
+  const pageCx = 'mx-auto max-w-screen-lg px-4 py-6 sm:px-6 md:py-10';
 
   if (!productId) {
     return (
-      <Container maxWidth="lg" sx={pageSx}>
-        <Alert severity="error">Missing product id.</Alert>
-      </Container>
+      <div className={pageCx}>
+        <div
+          role="alert"
+          className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-900"
+        >
+          Missing product id.
+        </div>
+      </div>
     );
   }
 
   if (isLoading) {
     return (
-      <Container maxWidth="lg" sx={pageSx}>
-        <Stack alignItems="center" py={6}>
-          <CircularProgress />
-        </Stack>
-      </Container>
+      <div className={pageCx}>
+        <div className="flex justify-center py-14">
+          <span className="size-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        </div>
+      </div>
     );
   }
 
   if (isError || !product) {
     return (
-      <Container maxWidth="lg" sx={pageSx}>
-        <Alert severity="error">Failed to load product.</Alert>
-      </Container>
+      <div className={pageCx}>
+        <div
+          role="alert"
+          className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-900"
+        >
+          Failed to load product.
+        </div>
+      </div>
     );
   }
 
   return (
-    <Container maxWidth="lg" sx={pageSx}>
-      <Stack spacing={3}>
-        <Typography variant="h4" fontWeight={700}>
-          {product.title ?? product.name}
-        </Typography>
+    <div className={pageCx}>
+      <div className="flex flex-col gap-6">
+        <h1 className="text-3xl font-bold text-slate-900">{product.title ?? product.name}</h1>
         {(product.averageRating !== undefined || product.numReviews !== undefined) && (
-          <Typography color="text.secondary">
+          <p className="text-slate-600">
             Rating: {(product.averageRating ?? 0).toFixed(1)} / 5 • Reviews:{' '}
             {product.numReviews ?? 0}
-          </Typography>
+          </p>
         )}
-        <Box>
-          <Typography variant="h6">Description</Typography>
-          <Typography color="text.secondary">{product.description}</Typography>
-        </Box>
-        <Stack direction="row" spacing={2} flexWrap="wrap" alignItems="center">
-          <Button variant="contained" size="large" disabled={isAdding} onClick={handleAddToCart}>
+        <div>
+          <h2 className="text-lg font-semibold text-slate-900">Description</h2>
+          <p className="mt-1 text-slate-600">{product.description}</p>
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <Button shopVariant="primary" size="large" disabled={isAdding} onClick={handleAddToCart}>
             Add to cart
           </Button>
-          <Button variant="outlined" size="large">
+          <Button shopVariant="secondary" size="large">
             Buy now
           </Button>
-        </Stack>
+        </div>
 
-        <Box>
-          <Typography variant="h6" gutterBottom>
-            Reviews
-          </Typography>
+        <div>
+          <h2 className="mb-3 text-lg font-semibold text-slate-900">Reviews</h2>
 
           {isReviewsLoading ? (
-            <Stack alignItems="center" justifyContent="center" minHeight={120}>
-              <CircularProgress size={24} />
-            </Stack>
+            <div className="flex min-h-[120px] items-center justify-center">
+              <span className="size-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            </div>
           ) : isReviewsError ? (
-            <Alert severity="error">Failed to load reviews.</Alert>
+            <div
+              role="alert"
+              className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-900"
+            >
+              Failed to load reviews.
+            </div>
           ) : (
-            <Stack spacing={2}>
+            <div className="flex flex-col gap-4">
               {reviewsData?.reviews?.length ? (
                 reviewsData.reviews.map((r) => (
                   <PaperReview
@@ -121,75 +124,65 @@ export const ProductPage = () => {
                   />
                 ))
               ) : (
-                <Alert severity="info" variant="outlined">
+                <div className="rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sky-900">
                   No reviews yet.
-                </Alert>
+                </div>
               )}
 
-              <Stack
-                spacing={2}
-                sx={{
-                  p: 2,
-                  borderRadius: 2,
-                  border: '1px solid',
-                  borderColor: 'divider',
-                }}
-              >
-                <Typography fontWeight={700}>Write a review</Typography>
+              <div className="rounded-2xl border border-slate-200 p-4">
+                <p className="mb-3 font-bold text-slate-900">Write a review</p>
 
-                <TextField
-                  label="Rating (1-5)"
-                  type="number"
-                  inputProps={{ min: 1, max: 5, step: 1 }}
-                  value={rating}
-                  onChange={(e) => setRating(Number(e.target.value))}
-                />
-                <TextField
-                  label="Title"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  fullWidth
-                />
-                <TextField
-                  label="Comment"
-                  value={comment}
-                  onChange={(e) => setComment(e.target.value)}
-                  fullWidth
-                  multiline
-                  minRows={3}
-                />
+                <div className="flex flex-col gap-3">
+                  <Input
+                    label="Rating (1-5)"
+                    type="number"
+                    min={1}
+                    max={5}
+                    step={1}
+                    value={String(rating)}
+                    onChange={(e) => setRating(Number(e.target.value))}
+                  />
+                  <Input label="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
+                  <Input
+                    label="Comment"
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                    multiline
+                    minRows={3}
+                  />
 
-                <Button
-                  variant="contained"
-                  disabled={isSubmitting}
-                  onClick={() => {
-                    if (!productId) return;
-                    void (async () => {
-                      try {
-                        await submitReview({
-                          productId,
-                          payload: {
-                            rating,
-                            title: title || undefined,
-                            comment: comment || undefined,
-                          },
-                        }).unwrap();
-                        setTitle('');
-                        setComment('');
-                      } catch {
-                        // UI keeps it minimal; error can be shown later.
-                      }
-                    })();
-                  }}
-                >
-                  Submit review
-                </Button>
-              </Stack>
-            </Stack>
+                  <Button
+                    shopVariant="primary"
+                    disabled={isSubmitting}
+                    onClick={() => {
+                      if (!productId) return;
+                      void (async () => {
+                        try {
+                          await submitReview({
+                            productId,
+                            payload: {
+                              rating,
+                              title: title || undefined,
+                              comment: comment || undefined,
+                            },
+                          }).unwrap();
+                          setTitle('');
+                          setComment('');
+                        } catch {
+                          // UI keeps it minimal; error can be shown later.
+                        }
+                      })();
+                    }}
+                  >
+                    Submit review
+                  </Button>
+                </div>
+              </div>
+            </div>
           )}
-        </Box>
-      </Stack>
-    </Container>
+        </div>
+      </div>
+    </div>
   );
 };
 
@@ -205,27 +198,12 @@ const PaperReview = ({
   authorName: string;
 }) => {
   return (
-    <Box
-      sx={{
-        p: 2,
-        borderRadius: 2,
-        border: '1px solid',
-        borderColor: 'divider',
-      }}
-    >
-      <Typography fontWeight={700}>
+    <div className="rounded-2xl border border-slate-200 p-4">
+      <p className="font-bold text-slate-900">
         {authorName} • {rating} / 5
-      </Typography>
-      {title ? (
-        <Typography sx={{ mt: 0.5 }} fontWeight={600}>
-          {title}
-        </Typography>
-      ) : null}
-      {comment ? (
-        <Typography color="text.secondary" sx={{ mt: 0.5 }}>
-          {comment}
-        </Typography>
-      ) : null}
-    </Box>
+      </p>
+      {title ? <p className="mt-1 font-semibold text-slate-800">{title}</p> : null}
+      {comment ? <p className="mt-1 text-slate-600">{comment}</p> : null}
+    </div>
   );
 };

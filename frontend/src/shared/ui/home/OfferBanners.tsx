@@ -1,82 +1,35 @@
-import LocalOfferOutlinedIcon from '@mui/icons-material/LocalOfferOutlined';
-import PaymentsOutlinedIcon from '@mui/icons-material/PaymentsOutlined';
-import { Box, Container, Paper, Stack, Typography } from '@mui/material';
-import { alpha } from '@mui/material/styles';
+import { IconLocalOffer, IconPayments } from '../icons/storefront';
 
 export const OfferBanners = () => {
   return (
-    <Box component="section" sx={{ py: { xs: 3, md: 4 } }}>
-      <Container maxWidth="lg">
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
-            gap: 2,
-          }}
-        >
-          <Paper
-            variant="outlined"
-            sx={(theme) => ({
-              p: 3,
-              borderRadius: 2,
-              display: 'flex',
-              gap: 2,
-              alignItems: 'flex-start',
-              bgcolor: alpha(theme.palette.error.main, 0.06),
-              borderColor: alpha(theme.palette.error.main, 0.2),
-            })}
-          >
-            <Box
-              sx={{
-                bgcolor: 'error.main',
-                color: 'common.white',
-                p: 1,
-                borderRadius: 1.5,
-                display: 'flex',
-              }}
-            >
-              <LocalOfferOutlinedIcon />
-            </Box>
-            <Stack spacing={0.5}>
-              <Typography fontWeight={800}>Extra 10% off with ShopSphere Pay</Typography>
-              <Typography variant="body2" color="text.secondary">
+    <section className="py-8 md:py-10">
+      <div className="mx-auto max-w-screen-lg px-4 sm:px-6">
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="flex gap-4 rounded-2xl border border-red-200/80 bg-red-50/80 p-5">
+            <div className="flex shrink-0 rounded-xl bg-red-600 p-3 text-white">
+              <IconLocalOffer />
+            </div>
+            <div className="flex min-w-0 flex-col gap-0.5">
+              <p className="font-extrabold text-slate-900">Extra 10% off with ShopSphere Pay</p>
+              <p className="text-sm text-slate-600">
                 On orders above $50. Limited period. T&amp;C apply.
-              </Typography>
-            </Stack>
-          </Paper>
+              </p>
+            </div>
+          </div>
 
-          <Paper
-            variant="outlined"
-            sx={(theme) => ({
-              p: 3,
-              borderRadius: 2,
-              display: 'flex',
-              gap: 2,
-              alignItems: 'flex-start',
-              bgcolor: alpha(theme.palette.primary.main, 0.06),
-              borderColor: alpha(theme.palette.primary.main, 0.2),
-            })}
-          >
-            <Box
-              sx={{
-                bgcolor: 'primary.main',
-                color: 'common.white',
-                p: 1,
-                borderRadius: 1.5,
-                display: 'flex',
-              }}
-            >
-              <PaymentsOutlinedIcon />
-            </Box>
-            <Stack spacing={0.5}>
-              <Typography fontWeight={800}>No-cost EMI on select cards</Typography>
-              <Typography variant="body2" color="text.secondary">
+          <div className="flex gap-4 rounded-2xl border border-primary/25 bg-primary/5 p-5">
+            <div className="flex shrink-0 rounded-xl bg-primary p-3 text-white">
+              <IconPayments />
+            </div>
+            <div className="flex min-w-0 flex-col gap-0.5">
+              <p className="font-extrabold text-slate-900">No-cost EMI on select cards</p>
+              <p className="text-sm text-slate-600">
                 3 &amp; 6 month plans on bestsellers. Checkout for eligible items.
-              </Typography>
-            </Stack>
-          </Paper>
-        </Box>
-      </Container>
-    </Box>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 };

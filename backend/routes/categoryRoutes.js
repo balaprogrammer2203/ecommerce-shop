@@ -2,6 +2,7 @@ const express = require('express');
 
 const {
   getCategories,
+  getMegaMenu,
   getCategoryTree,
   getCategoryBreadcrumbs,
   getCategoryById,
@@ -15,6 +16,7 @@ const { protect, admin } = require('../middleware/authMiddleware');
 const router = express.Router();
 
 router.get('/tree', getCategoryTree);
+router.get('/mega-menu', getMegaMenu);
 router.get('/:id/breadcrumbs', getCategoryBreadcrumbs);
 router.get('/', getCategories);
 router.get('/:id', getCategoryById);

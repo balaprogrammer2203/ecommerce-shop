@@ -1,9 +1,6 @@
-import FacebookIcon from '@mui/icons-material/Facebook';
-import InstagramIcon from '@mui/icons-material/Instagram';
-import TwitterIcon from '@mui/icons-material/Twitter';
-import YouTubeIcon from '@mui/icons-material/YouTube';
-import { Box, Container, Divider, IconButton, Link, Stack, Typography } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
+
+import { IconFacebook, IconInstagram, IconTwitter, IconYouTube } from '../icons/storefront';
 
 const footerColumns = [
   {
@@ -36,99 +33,91 @@ export const SiteFooter = () => {
   const year = new Date().getFullYear();
 
   return (
-    <Box
-      component="footer"
-      sx={{
-        bgcolor: 'grey.900',
-        color: 'grey.300',
-        pt: { xs: 4, md: 6 },
-        pb: 3,
-      }}
-    >
-      <Container maxWidth="lg">
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' },
-            gap: { xs: 3, md: 4 },
-          }}
-        >
-          <Box>
-            <Typography
-              variant="h6"
-              sx={{ color: 'common.white', fontWeight: 800, letterSpacing: 0.5, mb: 1 }}
-            >
-              ShopSphere
-            </Typography>
-            <Typography variant="body2" sx={{ color: 'grey.500', mb: 2 }}>
+    <footer className="bg-slate-900 pt-10 pb-6 text-slate-300 md:pt-14">
+      <div className="mx-auto max-w-screen-lg px-4 sm:px-6">
+        <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-4 md:gap-10">
+          <div>
+            <p className="mb-2 text-lg font-extrabold tracking-wide text-white">ShopSphere</p>
+            <p className="mb-4 text-sm text-slate-500">
               Everything you need — electronics, fashion, home &amp; more. Trusted delivery and easy
               returns.
-            </Typography>
-            <Stack direction="row" spacing={0.5}>
-              <IconButton aria-label="Facebook" sx={{ color: 'grey.400' }} size="small">
-                <FacebookIcon fontSize="small" />
-              </IconButton>
-              <IconButton aria-label="Twitter" sx={{ color: 'grey.400' }} size="small">
-                <TwitterIcon fontSize="small" />
-              </IconButton>
-              <IconButton aria-label="Instagram" sx={{ color: 'grey.400' }} size="small">
-                <InstagramIcon fontSize="small" />
-              </IconButton>
-              <IconButton aria-label="YouTube" sx={{ color: 'grey.400' }} size="small">
-                <YouTubeIcon fontSize="small" />
-              </IconButton>
-            </Stack>
-          </Box>
+            </p>
+            <div className="flex gap-1">
+              <a
+                href="https://facebook.com"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-white/10 hover:text-white"
+                aria-label="Facebook"
+              >
+                <IconFacebook />
+              </a>
+              <a
+                href="https://twitter.com"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-white/10 hover:text-white"
+                aria-label="Twitter"
+              >
+                <IconTwitter />
+              </a>
+              <a
+                href="https://instagram.com"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-white/10 hover:text-white"
+                aria-label="Instagram"
+              >
+                <IconInstagram />
+              </a>
+              <a
+                href="https://youtube.com"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-white/10 hover:text-white"
+                aria-label="YouTube"
+              >
+                <IconYouTube />
+              </a>
+            </div>
+          </div>
 
           {footerColumns.map((col) => (
-            <Box key={col.title}>
-              <Typography
-                variant="subtitle2"
-                sx={{ color: 'common.white', fontWeight: 700, mb: 1.5 }}
-              >
-                {col.title}
-              </Typography>
-              <Stack spacing={1}>
+            <div key={col.title}>
+              <p className="mb-3 text-sm font-bold text-white">{col.title}</p>
+              <ul className="flex flex-col gap-2 list-none p-0">
                 {col.links.map((l) => (
-                  <Link
-                    key={l.label}
-                    component={RouterLink}
-                    to={l.to}
-                    underline="hover"
-                    sx={{ color: 'grey.400', fontSize: 14, '&:hover': { color: 'common.white' } }}
-                  >
-                    {l.label}
-                  </Link>
+                  <li key={l.label}>
+                    <RouterLink
+                      to={l.to}
+                      className="text-sm text-slate-400 no-underline transition-colors hover:text-white"
+                    >
+                      {l.label}
+                    </RouterLink>
+                  </li>
                 ))}
-              </Stack>
-            </Box>
+              </ul>
+            </div>
           ))}
-        </Box>
+        </div>
 
-        <Divider sx={{ my: 4, borderColor: 'grey.800' }} />
+        <hr className="my-8 border-slate-800" />
 
-        <Stack
-          direction={{ xs: 'column', sm: 'row' }}
-          spacing={1}
-          justifyContent="space-between"
-          alignItems={{ xs: 'flex-start', sm: 'center' }}
-        >
-          <Typography variant="caption" sx={{ color: 'grey.600' }}>
-            © {year} ShopSphere. All rights reserved.
-          </Typography>
-          <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
-            <Link href="#" underline="hover" sx={{ color: 'grey.500', fontSize: 12 }}>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-xs text-slate-600">© {year} ShopSphere. All rights reserved.</p>
+          <div className="flex flex-wrap gap-4">
+            <RouterLink to="/" className="text-xs text-slate-500 no-underline hover:text-slate-300">
               Privacy
-            </Link>
-            <Link href="#" underline="hover" sx={{ color: 'grey.500', fontSize: 12 }}>
+            </RouterLink>
+            <RouterLink to="/" className="text-xs text-slate-500 no-underline hover:text-slate-300">
               Terms of use
-            </Link>
-            <Link href="#" underline="hover" sx={{ color: 'grey.500', fontSize: 12 }}>
+            </RouterLink>
+            <RouterLink to="/" className="text-xs text-slate-500 no-underline hover:text-slate-300">
               Cookies
-            </Link>
-          </Stack>
-        </Stack>
-      </Container>
-    </Box>
+            </RouterLink>
+          </div>
+        </div>
+      </div>
+    </footer>
   );
 };

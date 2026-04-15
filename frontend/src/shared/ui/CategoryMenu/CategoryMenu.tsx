@@ -1,6 +1,3 @@
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import { Box, Button, Divider, Menu, Link as MuiLink, Typography } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
 import { useEffect, useMemo, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 
@@ -8,6 +5,8 @@ import {
   fetchActiveCategoryTree,
   type BackendCategoryTreeNode,
 } from '../../lib/categoryTreeClient';
+import { cn } from '../../lib/cn';
+import { IconChevronDown } from '../icons/storefront';
 
 type MenuVariant = 'light' | 'dark';
 
@@ -16,11 +15,11 @@ type CategoryMenuProps = {
 };
 
 export const CategoryMenu = ({ variant = 'light' }: CategoryMenuProps) => {
-  const theme = useTheme();
-  const primary = theme.palette.primary.main;
-
-  const [categoryAnchor, setCategoryAnchor] = useState<null | HTMLElement>(null);
-  const [activeRoot, setActiveRoot] = useState<BackendCategoryTreeNode | null>(null);
+  const [popover, setPopover] = useState<{
+    root: BackendCategoryTreeNode;
+    left: number;
+    top: number;
+  } | null>(null);
   const [tree, setTree] = useState<BackendCategoryTreeNode[] | null>(null);
 
   useEffect(() => {
@@ -41,168 +40,101 @@ export const CategoryMenu = ({ variant = 'light' }: CategoryMenuProps) => {
 
   const roots = tree ?? [];
 
-  const openCategoryMenu = (
-    event: React.MouseEvent<HTMLElement>,
-    root: BackendCategoryTreeNode,
-  ) => {
-    setActiveRoot(root);
-    setCategoryAnchor(event.currentTarget);
+  const openCategoryMenu = (e: React.MouseEvent<HTMLElement>, root: BackendCategoryTreeNode) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    setPopover({
+      root,
+      left: Math.max(12, Math.min(r.left, window.innerWidth - 720)),
+      top: r.bottom + 6,
+    });
   };
 
-  const closeAll = () => {
-    setCategoryAnchor(null);
-    setActiveRoot(null);
-  };
+  const closeAll = () => setPopover(null);
 
-  const rootChildren = useMemo(() => activeRoot?.children ?? [], [activeRoot]);
+  useEffect(() => {
+    if (!popover) return;
+    const onKey = (ev: KeyboardEvent) => {
+      if (ev.key === 'Escape') closeAll();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [popover]);
+
+  const rootChildren = useMemo(() => popover?.root.children ?? [], [popover?.root]);
+
+  const btnLight =
+    'rounded-full px-3 py-2 text-[13px] font-bold text-slate-900 min-h-9 hover:bg-primary/10 hover:text-primary';
+  const btnDark =
+    'rounded-full px-3 py-2 text-[13px] font-bold text-slate-50 min-h-9 hover:bg-white/10';
 
   return (
     <>
-      <Box
-        sx={{
-          display: 'flex',
-          gap: 2,
-          flexWrap: 'nowrap',
-          alignItems: 'center',
-          justifyContent: 'flex-start',
-          overflowX: 'auto',
-          px: 0,
-          py: 0,
-          border: 'none',
-          borderRadius: 0,
-          bgcolor: 'transparent',
-          '&::-webkit-scrollbar': { display: 'none' },
-        }}
-      >
+      <div className="flex flex-nowrap items-center justify-start gap-2 overflow-x-auto border-0 bg-transparent py-0 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {roots.map((cat) => (
-          <Button
+          <button
             key={cat._id}
-            variant="text"
-            endIcon={<KeyboardArrowDownIcon fontSize="small" />}
+            type="button"
             onClick={(e) => openCategoryMenu(e, cat)}
-            aria-haspopup="menu"
-            aria-expanded={Boolean(categoryAnchor) && activeRoot?._id === cat._id}
-            sx={
-              variant === 'dark'
-                ? {
-                    color: '#F8FAFC',
-                    fontWeight: 700,
-                    textTransform: 'none',
-                    px: 2,
-                    py: 0.75,
-                    borderRadius: 999,
-                    fontSize: 13,
-                    minHeight: 36,
-                    '&:hover': { bgcolor: 'rgba(248,250,252,0.10)' },
-                  }
-                : {
-                    color: 'rgba(17,24,39,0.92)',
-                    fontWeight: 700,
-                    textTransform: 'none',
-                    px: 2,
-                    py: 0.75,
-                    borderRadius: 999,
-                    fontSize: 13,
-                    minHeight: 36,
-                    '&:hover': { bgcolor: 'rgba(26,115,232,0.10)', color: primary },
-                  }
-            }
+            aria-haspopup="dialog"
+            aria-expanded={popover?.root._id === cat._id}
+            className={cn(
+              'inline-flex items-center gap-0.5 border-0 bg-transparent',
+              variant === 'dark' ? btnDark : btnLight,
+            )}
           >
             {cat.name}
-          </Button>
+            <IconChevronDown size={18} className="opacity-70" aria-hidden />
+          </button>
         ))}
-      </Box>
+      </div>
 
-      <Menu
-        anchorEl={categoryAnchor}
-        open={Boolean(categoryAnchor)}
-        onClose={closeAll}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-        transformOrigin={{ vertical: 'top', horizontal: 'left' }}
-        MenuListProps={{ dense: true }}
-        slotProps={{
-          paper: {
-            sx: { borderRadius: 2, mt: 1, overflow: 'hidden' },
-          },
-        }}
-      >
-        <Box
-          sx={{
-            p: 2,
-            minWidth: 680,
-            maxWidth: 920,
-            bgcolor: 'background.paper',
-            border: '1px solid rgba(15,23,42,0.08)',
-            boxShadow: '0px 14px 40px rgba(15,23,42,0.18)',
-          }}
-        >
-          <Box sx={{ px: 0.5 }}>
-            <Typography variant="subtitle1" fontWeight={900} sx={{ mb: 1 }}>
-              {activeRoot?.name ?? ''}
-            </Typography>
-            <Divider sx={{ mb: 2 }} />
-          </Box>
-
-          {rootChildren.length ? (
-            <Box
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: {
-                  xs: '1fr',
-                  sm: 'repeat(2, minmax(210px, 1fr))',
-                  md: 'repeat(3, minmax(220px, 1fr))',
-                },
-                gap: 2,
-                maxHeight: 420,
-                overflow: 'auto',
-                pr: 1,
-              }}
-            >
-              {rootChildren.map((l2) => {
-                const l3 = l2.children ?? [];
-                return (
-                  <Box key={l2._id}>
-                    <Typography
-                      fontWeight={900}
-                      sx={{
-                        fontSize: 13,
-                        color: 'text.primary',
-                        mb: 1,
-                      }}
-                    >
-                      {l2.name}
-                    </Typography>
-
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
-                      {(l3.length ? l3 : [l2]).map((leaf) => (
-                        <MuiLink
-                          key={leaf._id}
-                          component={RouterLink}
-                          to={`/category/${leaf.slug}`}
-                          underline="none"
-                          onClick={closeAll}
-                          sx={{
-                            fontSize: 13,
-                            color: 'text.secondary',
-                            py: 0.25,
-                            '&:hover': { color: primary, textDecoration: 'underline' },
-                          }}
-                        >
-                          {leaf.name}
-                        </MuiLink>
-                      ))}
-                    </Box>
-                  </Box>
-                );
-              })}
-            </Box>
-          ) : (
-            <Typography color="text.secondary" sx={{ p: 1 }}>
-              No categories available.
-            </Typography>
-          )}
-        </Box>
-      </Menu>
+      {popover ? (
+        <>
+          <button
+            type="button"
+            className="fixed inset-0 z-40 cursor-default bg-transparent"
+            aria-label="Close category menu"
+            onClick={closeAll}
+          />
+          <div
+            role="dialog"
+            aria-label={popover.root.name}
+            className="fixed z-50 max-h-[min(420px,calc(100vh-48px))] w-[min(920px,calc(100vw-24px))] overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-2xl"
+            style={{ left: popover.left, top: popover.top }}
+          >
+            <div className="max-h-[420px] overflow-auto p-4">
+              <p className="mb-1 px-1 text-base font-black text-slate-900">{popover.root.name}</p>
+              <hr className="mb-3 border-slate-200" />
+              {rootChildren.length ? (
+                <div className="grid max-h-[360px] grid-cols-1 gap-4 overflow-auto pr-1 sm:grid-cols-2 md:grid-cols-3">
+                  {rootChildren.map((l2) => {
+                    const l3 = l2.children ?? [];
+                    return (
+                      <div key={l2._id}>
+                        <p className="mb-2 text-[13px] font-black text-slate-900">{l2.name}</p>
+                        <div className="flex flex-col gap-0.5">
+                          {(l3.length ? l3 : [l2]).map((leaf) => (
+                            <RouterLink
+                              key={leaf._id}
+                              to={`/category/${leaf.slug}`}
+                              onClick={closeAll}
+                              className="py-0.5 text-[13px] text-slate-600 no-underline hover:text-primary hover:underline"
+                            >
+                              {leaf.name}
+                            </RouterLink>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="p-2 text-sm text-slate-600">No categories available.</p>
+              )}
+            </div>
+          </div>
+        </>
+      ) : null}
     </>
   );
 };

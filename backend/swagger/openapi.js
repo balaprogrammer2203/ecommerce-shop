@@ -156,6 +156,41 @@ module.exports = {
         description: 'Category fields plus optional nested children (same shape at each level)',
         additionalProperties: true,
       },
+      MegaMenuLink: {
+        type: 'object',
+        properties: {
+          label: { type: 'string' },
+          categorySlug: { type: 'string' },
+          href: { type: 'string', description: 'Client route e.g. /category/{slug}' },
+          badge: { type: 'string', enum: ['new', 'trending', 'sale'], nullable: true },
+        },
+        required: ['label', 'categorySlug', 'href'],
+      },
+      MegaMenuColumn: {
+        type: 'object',
+        properties: {
+          title: { type: 'string' },
+          links: { type: 'array', items: { $ref: '#/components/schemas/MegaMenuLink' } },
+        },
+        required: ['title', 'links'],
+      },
+      MegaMenuItem: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          label: { type: 'string' },
+          sortOrder: { type: 'number' },
+          columns: { type: 'array', items: { $ref: '#/components/schemas/MegaMenuColumn' } },
+        },
+        required: ['id', 'label', 'columns'],
+      },
+      MegaMenuResponse: {
+        type: 'object',
+        properties: {
+          items: { type: 'array', items: { $ref: '#/components/schemas/MegaMenuItem' } },
+        },
+        required: ['items'],
+      },
       WishlistResponse: {
         type: 'object',
         properties: {
@@ -519,6 +554,22 @@ module.exports = {
           '200': { description: 'Removed', content: { 'application/json': { schema: { type: 'object', properties: { message: { type: 'string' } } } } } },
           '401': { $ref: '#/components/responses/Unauthorized' },
           '403': { $ref: '#/components/responses/Forbidden' },
+        },
+      },
+    },
+
+    '/api/categories/mega-menu': {
+      get: {
+        tags: ['Categories'],
+        summary: 'Storefront mega-menu (header navigation columns)',
+        operationId: 'getMegaMenu',
+        responses: {
+          '200': {
+            description: 'Menu tabs with columns and category links',
+            content: {
+              'application/json': { schema: { $ref: '#/components/schemas/MegaMenuResponse' } },
+            },
+          },
         },
       },
     },

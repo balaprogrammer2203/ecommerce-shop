@@ -1,28 +1,20 @@
-import { Container, Grid, Paper, Typography } from '@mui/material';
-
 export const CheckoutPage = () => {
   return (
-    <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 }, px: { xs: 2, sm: 3 } }}>
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={8}>
-          <Paper variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              Shipping details
-            </Typography>
-            <Typography color="text.secondary">Address forms and validation live here.</Typography>
-          </Paper>
-        </Grid>
-        <Grid item xs={12} md={4}>
-          <Paper variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              Order summary
-            </Typography>
-            <Typography color="text.secondary">
-              Cart totals, promos, and payment buttons.
-            </Typography>
-          </Paper>
-        </Grid>
-      </Grid>
-    </Container>
+    <div className="mx-auto max-w-screen-lg px-4 py-6 sm:px-6 md:py-10">
+      <div className="grid gap-6 md:grid-cols-12 md:gap-8">
+        <div className="md:col-span-8">
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h2 className="mb-2 text-lg font-semibold text-slate-900">Shipping details</h2>
+            <p className="text-sm text-slate-600">Address forms and validation live here.</p>
+          </div>
+        </div>
+        <div className="md:col-span-4">
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h2 className="mb-2 text-lg font-semibold text-slate-900">Order summary</h2>
+            <p className="text-sm text-slate-600">Cart totals, promos, and payment buttons.</p>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };

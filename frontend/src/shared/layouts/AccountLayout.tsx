@@ -1,22 +1,21 @@
-import { Box, Container, Stack, Typography } from '@mui/material';
 import { Outlet } from 'react-router-dom';
 
 import { Header } from '../ui/Header';
 
 export const AccountLayout = () => {
   return (
-    <Box>
+    <div className="min-h-screen bg-surface">
       <Header />
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Stack spacing={3}>
-          <Typography variant="h4" fontWeight={600}>
+      <div className="mx-auto max-w-screen-lg px-4 py-8 sm:px-6">
+        <div className="flex flex-col gap-6">
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-900 md:text-3xl">
             My Account
-          </Typography>
-          <Box>
+          </h1>
+          <div>
             <Outlet />
-          </Box>
-        </Stack>
-      </Container>
-    </Box>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };

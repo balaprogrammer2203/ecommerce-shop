@@ -1,15 +1,6 @@
-import {
-  Alert,
-  Button,
-  CircularProgress,
-  Container,
-  Divider,
-  Paper,
-  Stack,
-  Typography,
-} from '@mui/material';
 import { useMemo } from 'react';
 
+import { Button } from '../../../shared/ui/system/Button';
 import {
   useClearCartMutation,
   useMyCartQuery,
@@ -33,48 +24,40 @@ export const CartPage = () => {
   const isAuthError = maybeStatus === 401;
 
   return (
-    <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 }, px: { xs: 2, sm: 3 } }}>
-      <Stack spacing={3}>
-        <Typography variant="h4" fontWeight={700}>
-          Shopping Cart
-        </Typography>
+    <div className="mx-auto max-w-screen-lg px-4 py-6 sm:px-6 md:py-10">
+      <div className="flex flex-col gap-6">
+        <h1 className="text-3xl font-bold tracking-tight text-slate-900">Shopping Cart</h1>
 
         {isLoading ? (
-          <Stack alignItems="center" justifyContent="center" minHeight={200}>
-            <CircularProgress />
-          </Stack>
+          <div className="flex min-h-[200px] items-center justify-center">
+            <span className="size-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          </div>
         ) : isError ? (
-          <Alert severity="error">
+          <div
+            role="alert"
+            className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-900"
+          >
             {isAuthError ? 'Please login to view your cart.' : 'Failed to load cart.'}
-          </Alert>
+          </div>
         ) : (
           <>
-            <Paper variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
               {data?.items?.length ? (
-                <Stack spacing={2}>
+                <div className="flex flex-col gap-4">
                   {data.items.map((item) => (
-                    <Paper
+                    <div
                       key={item.id}
-                      variant="outlined"
-                      sx={{ p: 2, borderRadius: 2 }}
-                      elevation={0}
+                      className="rounded-2xl border border-slate-200 bg-slate-50/50 p-4"
                     >
-                      <Stack
-                        direction={{ xs: 'column', md: 'row' }}
-                        spacing={1.5}
-                        alignItems={{ xs: 'flex-start', md: 'center' }}
-                        justifyContent="space-between"
-                      >
-                        <Stack spacing={0.5}>
-                          <Typography fontWeight={650}>{item.name}</Typography>
-                          <Typography color="text.secondary">
-                            ${item.price.toFixed(2)} each
-                          </Typography>
-                        </Stack>
+                      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                        <div className="flex flex-col gap-0.5">
+                          <p className="font-semibold text-slate-900">{item.name}</p>
+                          <p className="text-sm text-slate-600">${item.price.toFixed(2)} each</p>
+                        </div>
 
-                        <Stack direction="row" spacing={1} alignItems="center">
+                        <div className="flex items-center gap-2">
                           <Button
-                            variant="outlined"
+                            shopVariant="secondary"
                             size="small"
                             onClick={() => {
                               if (item.quantity <= 1) {
@@ -86,11 +69,11 @@ export const CartPage = () => {
                           >
                             -
                           </Button>
-                          <Typography sx={{ width: 36, textAlign: 'center' }} fontWeight={700}>
+                          <span className="w-9 text-center text-base font-bold">
                             {item.quantity}
-                          </Typography>
+                          </span>
                           <Button
-                            variant="outlined"
+                            shopVariant="secondary"
                             size="small"
                             onClick={() =>
                               void updateQty({ productId: item.id, qty: item.quantity + 1 })
@@ -98,38 +81,36 @@ export const CartPage = () => {
                           >
                             +
                           </Button>
-                        </Stack>
-                      </Stack>
-                    </Paper>
+                        </div>
+                      </div>
+                    </div>
                   ))}
 
-                  <Divider sx={{ my: 1 }} />
+                  <hr className="border-slate-200" />
 
-                  <Stack spacing={1}>
-                    <Stack direction="row" justifyContent="space-between">
-                      <Typography color="text.secondary">Subtotal</Typography>
-                      <Typography fontWeight={700}>${totals.itemsPrice.toFixed(2)}</Typography>
-                    </Stack>
-                    <Stack direction="row" justifyContent="space-between">
-                      <Typography color="text.secondary">Total</Typography>
-                      <Typography fontWeight={700}>${totals.totalPrice.toFixed(2)}</Typography>
-                    </Stack>
-                  </Stack>
-                </Stack>
+                  <div className="flex flex-col gap-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-600">Subtotal</span>
+                      <span className="font-bold text-slate-900">
+                        ${totals.itemsPrice.toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-600">Total</span>
+                      <span className="font-bold text-slate-900">
+                        ${totals.totalPrice.toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
               ) : (
-                <Typography color="text.secondary">Your cart is empty.</Typography>
+                <p className="text-slate-600">Your cart is empty.</p>
               )}
-            </Paper>
+            </div>
 
-            <Stack
-              direction="row"
-              spacing={2}
-              alignItems="center"
-              sx={{ justifyContent: 'flex-end' }}
-            >
+            <div className="flex flex-wrap items-center justify-end gap-3">
               <Button
-                variant="outlined"
-                color="inherit"
+                shopVariant="secondary"
                 size="large"
                 disabled={!data?.items?.length || isClearing}
                 onClick={() => {
@@ -139,17 +120,17 @@ export const CartPage = () => {
                 Clear cart
               </Button>
               <Button
-                variant="contained"
-                color="primary"
+                to="/checkout"
+                shopVariant="primary"
                 size="large"
-                sx={{ alignSelf: 'flex-end' }}
+                disabled={!data?.items?.length}
               >
                 Proceed to checkout
               </Button>
-            </Stack>
+            </div>
           </>
         )}
-      </Stack>
-    </Container>
+      </div>
+    </div>
   );
 };

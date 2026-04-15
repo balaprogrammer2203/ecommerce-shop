@@ -1,8 +1,9 @@
-import { Alert, Button, Container, Paper, Stack, TextField, Typography } from '@mui/material';
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import { useAppDispatch } from '../../../app/hooks';
+import { Button } from '../../../shared/ui/system/Button';
+import { Input } from '../../../shared/ui/system/Input';
 import { useMergeWishlistMutation } from '../../wishlist/api/wishlistApi';
 import { clearGuestWishlist, readGuestWishlistIds } from '../../wishlist/lib/guestWishlistStorage';
 import { useLoginMutation } from '../api/authApi';
@@ -37,31 +38,35 @@ export const LoginPage = () => {
   };
 
   return (
-    <Container maxWidth="sm" sx={{ py: 4 }}>
-      <Stack alignItems="center" justifyContent="center" minHeight="60vh">
-        <Paper sx={{ p: 4, width: '100%', maxWidth: 400, borderRadius: 3 }}>
-          <Stack spacing={3}>
-            <Typography variant="h5" fontWeight={600}>
-              Welcome back
-            </Typography>
-            {error ? <Alert severity="error">Login failed. Check email/password.</Alert> : null}
-            <TextField
+    <div className="mx-auto max-w-sm px-4 py-10">
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+          <div className="flex flex-col gap-6">
+            <h1 className="text-xl font-semibold text-slate-900">Welcome back</h1>
+            {error ? (
+              <div
+                role="alert"
+                className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-900"
+              >
+                Login failed. Check email/password.
+              </div>
+            ) : null}
+            <Input
               label="Email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              fullWidth
             />
-            <TextField
+            <Input
               label="Password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              fullWidth
             />
             <Button
-              variant="contained"
+              shopVariant="primary"
               size="large"
+              fullWidth
               disabled={isLoading}
               onClick={() => {
                 void onSubmit();
@@ -69,9 +74,9 @@ export const LoginPage = () => {
             >
               Sign in
             </Button>
-          </Stack>
-        </Paper>
-      </Stack>
-    </Container>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };

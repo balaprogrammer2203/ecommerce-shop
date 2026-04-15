@@ -1,9 +1,7 @@
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import { Box, Container, IconButton, Stack, Typography } from '@mui/material';
 import { useRef } from 'react';
 
 import type { Product } from '../../../features/catalog/types';
+import { IconChevronLeft, IconChevronRight } from '../icons/storefront';
 import { ProductCard } from '../ProductCard';
 
 type TrendingCarouselProps = {
@@ -30,75 +28,49 @@ export const TrendingCarousel = ({
   }
 
   return (
-    <Box
-      component="section"
-      sx={{
-        py: { xs: 4, md: 6 },
-        bgcolor: 'background.default',
-        borderBlock: '1px solid',
-        borderColor: 'divider',
-      }}
-    >
-      <Container maxWidth="lg">
-        <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
-          <Typography variant="h5" fontWeight={800}>
+    <section className="border-y border-slate-200 bg-slate-50 py-10 md:py-14">
+      <div className="mx-auto max-w-screen-lg px-4 sm:px-6">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-xl font-extrabold tracking-tight text-slate-900 md:text-2xl">
             {title}
-          </Typography>
-          <Stack direction="row" spacing={0.5}>
-            <IconButton
+          </h2>
+          <div className="flex gap-0.5">
+            <button
+              type="button"
               aria-label="Scroll trending left"
               onClick={() => scrollBy(-320)}
-              size="small"
-              sx={{ border: '1px solid', borderColor: 'divider' }}
+              className="inline-flex rounded-lg border border-slate-200 bg-white p-1.5 text-slate-700 shadow-sm hover:bg-slate-100"
             >
-              <ChevronLeftIcon />
-            </IconButton>
-            <IconButton
+              <IconChevronLeft />
+            </button>
+            <button
+              type="button"
               aria-label="Scroll trending right"
               onClick={() => scrollBy(320)}
-              size="small"
-              sx={{ border: '1px solid', borderColor: 'divider' }}
+              className="inline-flex rounded-lg border border-slate-200 bg-white p-1.5 text-slate-700 shadow-sm hover:bg-slate-100"
             >
-              <ChevronRightIcon />
-            </IconButton>
-          </Stack>
-        </Stack>
+              <IconChevronRight />
+            </button>
+          </div>
+        </div>
 
-        <Box
+        <div
           ref={scrollerRef}
-          sx={{
-            display: 'flex',
-            gap: 2,
-            overflowX: 'auto',
-            pb: 1,
-            scrollSnapType: 'x mandatory',
-            scrollbarWidth: 'thin',
-            '&::-webkit-scrollbar': { height: 6 },
-            '&::-webkit-scrollbar-thumb': {
-              bgcolor: 'action.disabled',
-              borderRadius: 3,
-            },
-          }}
+          className="flex gap-4 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-color:rgba(148,163,184,0.9)_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300"
+          style={{ scrollSnapType: 'x mandatory' }}
         >
           {products.map((product) => (
-            <Box
-              key={product._id}
-              sx={{
-                flex: '0 0 auto',
-                width: { xs: 'min(280px, 85vw)', sm: 260 },
-                scrollSnapAlign: 'start',
-              }}
-            >
+            <div key={product._id} className="w-[min(280px,85vw)] shrink-0 snap-start sm:w-[260px]">
               <ProductCard
                 product={product}
                 variant="compact"
                 onAddToCart={() => onAddToCart(product._id)}
                 addToCartLoading={addingProductId === product._id}
               />
-            </Box>
+            </div>
           ))}
-        </Box>
-      </Container>
-    </Box>
+        </div>
+      </div>
+    </section>
   );
 };

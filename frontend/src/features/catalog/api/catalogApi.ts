@@ -1,13 +1,17 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 
 import { baseQuery } from '../../../services/baseQuery';
-import { Product, ProductListResponse } from '../types';
+import { MegaMenuResponse, Product, ProductListResponse } from '../types';
 
 export const catalogApi = createApi({
   reducerPath: 'catalogApi',
   baseQuery,
-  tagTypes: ['Product'],
+  tagTypes: ['Product', 'MegaMenu'],
   endpoints: (builder) => ({
+    megaMenu: builder.query<MegaMenuResponse, void>({
+      query: () => ({ url: '/categories/mega-menu' }),
+      providesTags: [{ type: 'MegaMenu', id: 'HEADER' }],
+    }),
     listProducts: builder.query<
       ProductListResponse,
       {
@@ -65,4 +69,4 @@ export const catalogApi = createApi({
   }),
 });
 
-export const { useListProductsQuery, useProductDetailQuery } = catalogApi;
+export const { useMegaMenuQuery, useListProductsQuery, useProductDetailQuery } = catalogApi;

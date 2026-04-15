@@ -9,6 +9,7 @@ import { HomePage } from '../features/catalog/pages/HomePage';
 import { ProductPage } from '../features/catalog/pages/ProductPage';
 import { CheckoutPage } from '../features/checkout/pages/CheckoutPage';
 import { OrdersPage } from '../features/orders/pages/OrdersPage';
+import { WishlistPage } from '../features/wishlist/pages/WishlistPage';
 import { AccountLayout } from '../shared/layouts/AccountLayout';
 import { AdminLayout } from '../shared/layouts/AdminLayout';
 import { PublicLayout } from '../shared/layouts/PublicLayout';
@@ -25,6 +26,7 @@ export const appRouter = createBrowserRouter([
       { index: true, element: <HomePage /> },
       { path: 'category/:slug', element: <CategoryPage /> },
       { path: 'product/:productId', element: <ProductPage /> },
+      { path: 'wishlist', element: <WishlistPage /> },
     ],
   },
   {

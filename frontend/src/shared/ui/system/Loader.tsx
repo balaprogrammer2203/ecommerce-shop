@@ -1,83 +1,64 @@
-import {
-  Box,
-  CircularProgress,
-  type CircularProgressProps,
-  Skeleton,
-  Stack,
-  Typography,
-} from '@mui/material';
 import type { ReactNode } from 'react';
 
+import { cn } from '../../lib/cn';
+
 export type PageLoaderProps = {
-  /** Optional status under the spinner */
   message?: ReactNode;
-  /** Covers viewport center vs inline block */
   fullViewport?: boolean;
-  /** MUI CircularProgress props */
-  progressProps?: CircularProgressProps;
+  className?: string;
 };
 
-/**
- * Full-page or section blocking loader (checkout, account).
- */
-export const PageLoader = ({ message, fullViewport = true, progressProps }: PageLoaderProps) => {
+export const PageLoader = ({ message, fullViewport = true, className }: PageLoaderProps) => {
   return (
-    <Stack
-      alignItems="center"
-      justifyContent="center"
-      spacing={2}
-      sx={{
-        minHeight: fullViewport ? '40vh' : 120,
-        py: 4,
-      }}
+    <div
+      className={cn(
+        'flex flex-col items-center justify-center gap-3 py-10',
+        fullViewport ? 'min-h-[40vh]' : 'min-h-[120px]',
+        className,
+      )}
     >
-      <CircularProgress size={40} thickness={4} {...progressProps} />
+      <span
+        className="inline-block size-10 animate-spin rounded-full border-[3px] border-primary border-t-transparent"
+        aria-hidden
+      />
       {message != null ? (
-        <Typography variant="body2" color="text.secondary" textAlign="center">
-          {message}
-        </Typography>
+        <p className="max-w-xs text-center text-sm text-slate-600">{message}</p>
       ) : null}
-    </Stack>
+    </div>
   );
 };
 
-export type InlineLoaderProps = CircularProgressProps & {
+export type InlineLoaderProps = {
   label?: ReactNode;
+  size?: number;
 };
 
-/**
- * Inline spinner for buttons rows or table cells.
- */
-export const InlineLoader = ({ label, size = 24, ...rest }: InlineLoaderProps) => {
+export const InlineLoader = ({ label, size = 24 }: InlineLoaderProps) => {
   return (
-    <Stack direction="row" alignItems="center" spacing={1}>
-      <CircularProgress size={size} thickness={4} {...rest} />
-      {label != null ? (
-        <Typography variant="body2" color="text.secondary">
-          {label}
-        </Typography>
-      ) : null}
-    </Stack>
+    <div className="flex items-center gap-2">
+      <span
+        className="inline-block animate-spin rounded-full border-2 border-primary border-t-transparent"
+        style={{ width: size, height: size }}
+        aria-hidden
+      />
+      {label != null ? <span className="text-sm text-slate-600">{label}</span> : null}
+    </div>
   );
 };
 
 export type ProductCardSkeletonProps = {
-  /** Image area height */
   imageHeight?: number;
 };
 
-/**
- * Placeholder while product grid data loads.
- */
 export const ProductCardSkeleton = ({ imageHeight = 160 }: ProductCardSkeletonProps) => {
   return (
-    <Box>
-      <Skeleton variant="rectangular" height={imageHeight} sx={{ borderRadius: 1 }} />
-      <Stack spacing={1} sx={{ mt: 1.5 }}>
-        <Skeleton variant="text" width="70%" height={28} />
-        <Skeleton variant="text" width="40%" />
-        <Skeleton variant="text" width="50%" />
-      </Stack>
-    </Box>
+    <div className="animate-pulse">
+      <div className="rounded-lg bg-slate-200" style={{ height: imageHeight }} />
+      <div className="mt-3 flex flex-col gap-2">
+        <div className="h-7 w-[70%] rounded bg-slate-200" />
+        <div className="h-4 w-2/5 rounded bg-slate-200" />
+        <div className="h-4 w-1/2 rounded bg-slate-200" />
+      </div>
+    </div>
   );
 };

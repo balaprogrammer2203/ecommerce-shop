@@ -1,5 +1,3 @@
-import { Box, Container, Typography } from '@mui/material';
-
 import type { Product } from '../../../features/catalog/types';
 import { ProductCard } from '../ProductCard';
 import { PageLoader } from '../system/Loader';
@@ -20,26 +18,15 @@ export const FeaturedProductsSection = ({
   addingProductId,
 }: FeaturedProductsSectionProps) => {
   return (
-    <Box component="section" sx={{ py: { xs: 4, md: 6 } }}>
-      <Container maxWidth="lg">
-        <Typography variant="h5" fontWeight={800} sx={{ mb: 3 }}>
+    <section className="py-10 md:py-14">
+      <div className="mx-auto max-w-screen-lg px-4 sm:px-6">
+        <h2 className="mb-6 text-xl font-extrabold tracking-tight text-slate-900 md:text-2xl">
           {title}
-        </Typography>
+        </h2>
         {isLoading ? (
           <PageLoader message="Loading products…" fullViewport={false} />
         ) : (
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: {
-                xs: '1fr',
-                sm: 'repeat(2, 1fr)',
-                md: 'repeat(3, 1fr)',
-                lg: 'repeat(4, 1fr)',
-              },
-              gap: { xs: 2, md: 2.5 },
-            }}
-          >
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 md:gap-6 lg:grid-cols-4">
             {products.map((product) => (
               <ProductCard
                 key={product._id}
@@ -48,9 +35,9 @@ export const FeaturedProductsSection = ({
                 addToCartLoading={addingProductId === product._id}
               />
             ))}
-          </Box>
+          </div>
         )}
-      </Container>
-    </Box>
+      </div>
+    </section>
   );
 };

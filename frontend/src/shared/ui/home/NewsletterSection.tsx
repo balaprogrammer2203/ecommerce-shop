@@ -1,4 +1,3 @@
-import { Box, Container, Stack, Typography } from '@mui/material';
 import { type FormEvent, useState } from 'react';
 
 import { Button } from '../system/Button';
@@ -15,51 +14,38 @@ export const NewsletterSection = () => {
   };
 
   return (
-    <Box
-      component="section"
-      sx={{
-        py: { xs: 4, md: 5 },
-        background: (theme) =>
-          `linear-gradient(90deg, ${theme.palette.grey[100]} 0%, ${theme.palette.grey[50]} 100%)`,
-        borderTop: '1px solid',
-        borderColor: 'divider',
-      }}
-    >
-      <Container maxWidth="md">
-        <Stack
-          component="form"
+    <section className="border-t border-slate-200 bg-gradient-to-r from-slate-100 to-slate-50 py-10 md:py-12">
+      <div className="mx-auto max-w-3xl px-4 sm:px-6">
+        <form
           onSubmit={handleSubmit}
-          spacing={2}
-          alignItems={{ xs: 'stretch', sm: 'center' }}
-          direction={{ xs: 'column', sm: 'row' }}
+          className="flex flex-col items-stretch gap-4 sm:flex-row sm:items-end"
         >
-          <Box sx={{ flex: 1 }}>
-            <Typography variant="h6" fontWeight={800} gutterBottom>
-              Deals in your inbox
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
+          <div className="min-w-0 flex-1">
+            <h2 className="mb-2 text-lg font-extrabold text-slate-900">Deals in your inbox</h2>
+            <p className="text-sm text-slate-600">
               Subscribe for launches, coupons, and curated picks. Unsubscribe anytime.
-            </Typography>
-          </Box>
-          <Stack
-            direction={{ xs: 'column', sm: 'row' }}
-            spacing={1}
-            sx={{ width: { xs: '100%', sm: 'auto' } }}
-          >
+            </p>
+          </div>
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-end">
             <Input
               type="email"
               placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={submitted}
-              sx={{ minWidth: { sm: 260 } }}
+              className="sm:min-w-[260px]"
             />
-            <Button type="submit" shopVariant="primary" disabled={submitted} sx={{ minWidth: 120 }}>
+            <Button
+              type="submit"
+              shopVariant="primary"
+              disabled={submitted}
+              className="min-w-[120px] shrink-0"
+            >
               {submitted ? 'Subscribed' : 'Subscribe'}
             </Button>
-          </Stack>
-        </Stack>
-      </Container>
-    </Box>
+          </div>
+        </form>
+      </div>
+    </section>
   );
 };

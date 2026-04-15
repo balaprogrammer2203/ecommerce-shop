@@ -1,5 +1,4 @@
-import FormatQuoteIcon from '@mui/icons-material/FormatQuote';
-import { Avatar, Box, Container, Paper, Stack, Typography } from '@mui/material';
+import { IconFormatQuote } from '../icons/storefront';
 
 const testimonials = [
   {
@@ -24,54 +23,39 @@ const testimonials = [
 
 export const TestimonialsSection = () => {
   return (
-    <Box component="section" sx={{ py: { xs: 4, md: 6 }, bgcolor: 'grey.50' }}>
-      <Container maxWidth="lg">
-        <Typography variant="h5" fontWeight={800} sx={{ mb: 3, textAlign: 'center' }}>
+    <section className="bg-slate-50 py-10 md:py-14">
+      <div className="mx-auto max-w-screen-lg px-4 sm:px-6">
+        <h2 className="mb-6 text-center text-xl font-extrabold tracking-tight text-slate-900 md:text-2xl">
           Customers love ShopSphere
-        </Typography>
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' },
-            gap: 2,
-          }}
-        >
+        </h2>
+        <div className="grid gap-4 md:grid-cols-3">
           {testimonials.map((t) => (
-            <Paper
+            <article
               key={t.name}
-              variant="outlined"
-              sx={{ p: 3, borderRadius: 2, height: '100%', position: 'relative' }}
+              className="relative h-full rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
             >
-              <FormatQuoteIcon
-                sx={{
-                  position: 'absolute',
-                  top: 12,
-                  right: 16,
-                  fontSize: 40,
-                  color: 'action.disabled',
-                  opacity: 0.35,
-                }}
+              <IconFormatQuote
+                className="pointer-events-none absolute right-4 top-3 text-slate-400"
+                size={36}
               />
-              <Stack spacing={2}>
-                <Typography variant="body1" color="text.secondary" sx={{ pr: 3 }}>
+              <div className="flex flex-col gap-4">
+                <p className="pr-6 text-sm leading-relaxed text-slate-600 md:text-base">
                   “{t.quote}”
-                </Typography>
-                <Stack direction="row" spacing={1.5} alignItems="center">
-                  <Avatar sx={{ bgcolor: 'primary.main', width: 44, height: 44 }}>
+                </p>
+                <div className="flex items-center gap-3">
+                  <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-white">
                     {t.initials}
-                  </Avatar>
-                  <Box>
-                    <Typography fontWeight={700}>{t.name}</Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {t.role}
-                    </Typography>
-                  </Box>
-                </Stack>
-              </Stack>
-            </Paper>
+                  </div>
+                  <div>
+                    <p className="font-bold text-slate-900">{t.name}</p>
+                    <p className="text-xs text-slate-500">{t.role}</p>
+                  </div>
+                </div>
+              </div>
+            </article>
           ))}
-        </Box>
-      </Container>
-    </Box>
+        </div>
+      </div>
+    </section>
   );
 };

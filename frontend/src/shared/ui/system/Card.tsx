@@ -1,86 +1,58 @@
-import {
-  Box,
-  Card as MuiCard,
-  CardActions,
-  CardContent,
-  type CardProps as MuiCardProps,
-  Divider,
-  Stack,
-  Typography,
-} from '@mui/material';
 import type { ReactNode } from 'react';
 
-export type ShopCardProps = MuiCardProps & {
-  /** Card heading (product name, section title) */
+import { cn } from '../../lib/cn';
+
+export type ShopCardProps = React.HTMLAttributes<HTMLDivElement> & {
   title?: ReactNode;
-  /** Subtitle or meta (SKU, category) */
   subtitle?: ReactNode;
-  /** Main body — if omitted, `children` render inside `CardContent` */
   children?: ReactNode;
-  /** Footer row: actions, price + CTA */
   footer?: ReactNode;
-  /** Inner padding multiplier (theme spacing) */
-  contentPadding?: number;
+  contentPaddingClass?: string;
 };
 
-/**
- * Product / summary card with optional title, subtitle, and footer slot.
- */
 export const Card = ({
   title,
   subtitle,
   children,
   footer,
-  contentPadding = 2,
-  elevation = 0,
-  variant = 'outlined',
-  sx,
+  contentPaddingClass = 'p-4',
+  className,
   ...rest
 }: ShopCardProps) => {
-  return (
-    <MuiCard elevation={elevation} variant={variant} sx={{ borderRadius: 2, ...sx }} {...rest}>
-      {(title != null || subtitle != null) && (
-        <CardContent
-          sx={{
-            pb: title || subtitle ? 1 : contentPadding,
-            pt: contentPadding,
-            px: contentPadding,
-          }}
-        >
-          <Stack spacing={0.5}>
-            {title != null ? (
-              <Typography component="div" variant="h6" fontWeight={700}>
-                {title}
-              </Typography>
-            ) : null}
-            {subtitle != null ? (
-              <Typography component="div" variant="body2" color="text.secondary">
-                {subtitle}
-              </Typography>
-            ) : null}
-          </Stack>
-        </CardContent>
-      )}
+  const hasHeader = title != null || subtitle != null;
 
-      {title != null || subtitle != null ? (
-        children != null ? (
-          <>
-            <Divider sx={{ mx: contentPadding }} />
-            <CardContent sx={{ py: contentPadding, px: contentPadding }}>{children}</CardContent>
-          </>
-        ) : null
+  return (
+    <div
+      className={cn(
+        'flex flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm',
+        className,
+      )}
+      {...rest}
+    >
+      {hasHeader ? (
+        <div className={cn(contentPaddingClass, 'pb-2 pt-4')}>
+          <div className="flex flex-col gap-0.5">
+            {title != null ? <div className="text-lg font-bold text-slate-900">{title}</div> : null}
+            {subtitle != null ? <div className="text-sm text-slate-600">{subtitle}</div> : null}
+          </div>
+        </div>
+      ) : null}
+
+      {hasHeader && children != null ? (
+        <>
+          <div className="mx-4 border-t border-slate-100" />
+          <div className={cn(contentPaddingClass, 'py-4')}>{children}</div>
+        </>
       ) : (
-        <CardContent sx={{ py: contentPadding, px: contentPadding }}>{children}</CardContent>
+        <div className={cn(contentPaddingClass)}>{children}</div>
       )}
 
       {footer != null ? (
         <>
-          <Divider />
-          <CardActions sx={{ px: contentPadding, py: 1.5, justifyContent: 'flex-end' }}>
-            <Box width="100%">{footer}</Box>
-          </CardActions>
+          <div className="border-t border-slate-100" />
+          <div className={cn(contentPaddingClass, 'flex justify-end py-3')}>{footer}</div>
         </>
       ) : null}
-    </MuiCard>
+    </div>
   );
 };

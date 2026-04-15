@@ -1,0 +1,17 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-primary: #1a73e8;
+  --color-secondary: #ff6d00;
+  --color-surface: #f9fafb;
+}
+
+@layer base {
+  html {
+    @apply scroll-smooth antialiased text-slate-900 bg-surface;
+  }
+
+  body {
+    @apply min-h-screen;
+  }
+}
