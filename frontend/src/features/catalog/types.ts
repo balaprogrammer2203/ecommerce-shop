@@ -31,6 +31,9 @@ export type Product = {
   price: number;
   /** Optional list / MSRP — when greater than `price`, shows strike-through + discount badge */
   originalPrice?: number;
+  /** Optional sale price (used by admin editing / backend pricing) */
+  discountPrice?: number | null;
+  /** Optional list / MSRP — when greater than `price`, shows strike-through + discount badge */
   image?: string;
   images?: string[];
   description: string;
@@ -38,6 +41,8 @@ export type Product = {
   categories?: ProductCategorySnapshot[];
   countInStock: number;
   stock?: number;
+  isFeatured?: boolean;
+  isTrending?: boolean;
   brand?: string;
   averageRating?: number;
   numReviews?: number;

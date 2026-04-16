@@ -1,6 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { setupListeners } from '@reduxjs/toolkit/query';
 
+import { adminApi } from '../features/admin/api/adminApi';
 import { adminReducer } from '../features/admin/slices/adminSlice';
 import { authApi } from '../features/auth/api/authApi';
 import { authReducer } from '../features/auth/slices/authSlice';
@@ -23,6 +24,7 @@ export const store = configureStore({
     checkout: checkoutReducer,
     orders: ordersReducer,
     admin: adminReducer,
+    [adminApi.reducerPath]: adminApi.reducer,
     [authApi.reducerPath]: authApi.reducer,
     [cartApi.reducerPath]: cartApi.reducer,
     [catalogApi.reducerPath]: catalogApi.reducer,
@@ -35,6 +37,7 @@ export const store = configureStore({
       serializableCheck: false,
     }).concat(
       authApi.middleware,
+      adminApi.middleware,
       cartApi.middleware,
       catalogApi.middleware,
       ordersApi.middleware,

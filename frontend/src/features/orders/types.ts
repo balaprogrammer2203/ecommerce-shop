@@ -1,5 +1,10 @@
 export type Order = {
   _id: string;
+  user?: {
+    _id: string;
+    name: string;
+    email: string;
+  };
   orderItems?: Array<{
     product?: string;
     name: string;

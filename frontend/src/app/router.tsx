@@ -1,7 +1,12 @@
 import { createBrowserRouter } from 'react-router-dom';
 
 import { AccountProfilePage } from '../features/account/pages/AccountProfilePage';
+import { AdminCategoriesPage } from '../features/admin/pages/AdminCategoriesPage';
+import { AdminCategoryAttributesPage } from '../features/admin/pages/AdminCategoryAttributesPage';
 import { AdminDashboardPage } from '../features/admin/pages/AdminDashboardPage';
+import { AdminOrdersPage } from '../features/admin/pages/AdminOrdersPage';
+import { AdminProductsPage } from '../features/admin/pages/AdminProductsPage';
+import { AdminUsersPage } from '../features/admin/pages/AdminUsersPage';
 import { AuthGuard } from '../features/auth/components/AuthGuard';
 import { LoginPage } from '../features/auth/pages/LoginPage';
 import { CartPage } from '../features/cart/pages/CartPage';
@@ -70,6 +75,13 @@ export const appRouter = createBrowserRouter([
         <AdminLayout />
       </AuthGuard>
     ),
-    children: [{ index: true, element: <AdminDashboardPage /> }],
+    children: [
+      { index: true, element: <AdminDashboardPage /> },
+      { path: 'products', element: <AdminProductsPage /> },
+      { path: 'categories', element: <AdminCategoriesPage /> },
+      { path: 'category-attributes', element: <AdminCategoryAttributesPage /> },
+      { path: 'orders', element: <AdminOrdersPage /> },
+      { path: 'users', element: <AdminUsersPage /> },
+    ],
   },
 ]);
