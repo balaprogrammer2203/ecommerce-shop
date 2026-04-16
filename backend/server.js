@@ -5,6 +5,7 @@ const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 
 const connectDB = require('./config/db');
+const { handleStripeWebhook } = require('./controllers/paymentController');
 const errorHandler = require('./middleware/errorMiddleware');
 const { setupSwagger } = require('./swagger');
 
@@ -23,6 +24,7 @@ connectDB();
 setupSwagger(app);
 
 app.use(cors({ origin: CLIENT_URL, credentials: true }));
+app.post('/api/payments/stripe/webhook', express.raw({ type: 'application/json' }), handleStripeWebhook);
 app.use(express.json());
 app.use(cookieParser());
 
@@ -37,6 +39,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/products', require('./routes/productRoutes'));
 app.use('/api/orders', require('./routes/orderRoutes'));
+app.use('/api/payments', require('./routes/paymentRoutes'));
 app.use('/api/categories', require('./routes/categoryRoutes'));
 app.use('/api/category-attributes', require('./routes/categoryAttributeRoutes'));
 app.use('/api/reviews', require('./routes/reviewRoutes'));

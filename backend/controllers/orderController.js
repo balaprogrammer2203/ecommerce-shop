@@ -29,7 +29,7 @@ const createOrder = asyncHandler(async (req, res) => {
   }
 
   if (!paymentMethod) throw new AppError('Missing payment method', 400, 'VALIDATION_ERROR');
-  if (!['stripe', 'paypal', 'cod'].includes(paymentMethod)) {
+  if (!['stripe', 'paypal', 'razorpay', 'cod'].includes(paymentMethod)) {
     throw new AppError('Invalid payment method', 400, 'VALIDATION_ERROR');
   }
 

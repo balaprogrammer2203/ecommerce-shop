@@ -1,5 +1,6 @@
 import { createBrowserRouter } from 'react-router-dom';
 
+import { AccountProfilePage } from '../features/account/pages/AccountProfilePage';
 import { AdminDashboardPage } from '../features/admin/pages/AdminDashboardPage';
 import { AuthGuard } from '../features/auth/components/AuthGuard';
 import { LoginPage } from '../features/auth/pages/LoginPage';
@@ -8,6 +9,8 @@ import { CategoryPage } from '../features/catalog/pages/CategoryPage';
 import { HomePage } from '../features/catalog/pages/HomePage';
 import { ProductPage } from '../features/catalog/pages/ProductPage';
 import { CheckoutPage } from '../features/checkout/pages/CheckoutPage';
+import { CheckoutResultPage } from '../features/checkout/pages/CheckoutResultPage';
+import { OrderDetailPage } from '../features/orders/pages/OrderDetailPage';
 import { OrdersPage } from '../features/orders/pages/OrdersPage';
 import { WishlistPage } from '../features/wishlist/pages/WishlistPage';
 import { AccountLayout } from '../shared/layouts/AccountLayout';
@@ -27,23 +30,25 @@ export const appRouter = createBrowserRouter([
       { path: 'category/:slug', element: <CategoryPage /> },
       { path: 'product/:productId', element: <ProductPage /> },
       { path: 'wishlist', element: <WishlistPage /> },
+      { path: 'cart', element: <CartPage /> },
+      { path: 'login', element: <LoginPage /> },
+      {
+        path: 'checkout',
+        element: (
+          <AuthGuard>
+            <CheckoutPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'checkout/result',
+        element: (
+          <AuthGuard>
+            <CheckoutResultPage />
+          </AuthGuard>
+        ),
+      },
     ],
-  },
-  {
-    path: '/cart',
-    element: <CartPage />,
-  },
-  {
-    path: '/login',
-    element: <LoginPage />,
-  },
-  {
-    path: '/checkout',
-    element: (
-      <AuthGuard>
-        <CheckoutPage />
-      </AuthGuard>
-    ),
   },
   {
     path: '/account',
@@ -52,7 +57,11 @@ export const appRouter = createBrowserRouter([
         <AccountLayout />
       </AuthGuard>
     ),
-    children: [{ path: 'orders', element: <OrdersPage /> }],
+    children: [
+      { index: true, element: <AccountProfilePage /> },
+      { path: 'orders', element: <OrdersPage /> },
+      { path: 'orders/:orderId', element: <OrderDetailPage /> },
+    ],
   },
   {
     path: '/admin',

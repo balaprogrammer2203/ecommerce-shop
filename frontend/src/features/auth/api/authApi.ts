@@ -9,6 +9,11 @@ const toAuthResponse = (data: BackendAuthResponse): AuthResponse => ({
     name: data.name,
     email: data.email,
     role: data.role,
+    phone: data.phone || '',
+    dateOfBirth: data.dateOfBirth || null,
+    address: data.address || {},
+    profileImageUrl: data.profileImageUrl || '',
+    security: data.security || { twoFactorEnabled: false, lastLoginAt: null, activeSessions: [] },
   },
   token: data.token,
 });
@@ -18,6 +23,11 @@ const toUser = (data: BackendMeResponse): AuthResponse['user'] => ({
   name: data.name,
   email: data.email,
   role: data.role,
+  phone: data.phone || '',
+  dateOfBirth: data.dateOfBirth || null,
+  address: data.address || {},
+  profileImageUrl: data.profileImageUrl || '',
+  security: data.security || { twoFactorEnabled: false, lastLoginAt: null, activeSessions: [] },
 });
 
 export const authApi = createApi({
@@ -55,8 +65,49 @@ export const authApi = createApi({
       transformResponse: (response: BackendMeResponse) => toUser(response),
       providesTags: ['Auth'],
     }),
+    updateCurrentUser: builder.mutation<
+      AuthResponse['user'],
+      {
+        name?: string;
+        email?: string;
+        password?: string;
+        phone?: string;
+        dateOfBirth?: string | null;
+        profileImageUrl?: string;
+        address?: {
+          line1?: string;
+          line2?: string;
+          city?: string;
+          state?: string;
+          postalCode?: string;
+          country?: string;
+        };
+      }
+    >({
+      query: (payload) => ({
+        url: '/auth/me',
+        method: 'PUT',
+        body: payload,
+      }),
+      transformResponse: (response: BackendMeResponse) => toUser(response),
+      invalidatesTags: ['Auth'],
+    }),
+    uploadProfileImage: builder.mutation<{ profileImageUrl: string }, { imageBase64: string }>({
+      query: (payload) => ({
+        url: '/auth/me/profile-image',
+        method: 'POST',
+        body: payload,
+      }),
+      invalidatesTags: ['Auth'],
+    }),
   }),
 });
 
-export const { useLoginMutation, useRegisterMutation, useLogoutMutation, useCurrentUserQuery } =
-  authApi;
+export const {
+  useLoginMutation,
+  useRegisterMutation,
+  useLogoutMutation,
+  useCurrentUserQuery,
+  useUpdateCurrentUserMutation,
+  useUploadProfileImageMutation,
+} = authApi;

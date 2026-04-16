@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
+import { readGuestCartItems } from '../lib/guestCartStorage';
 import { CartItem } from '../types';
 
 type CartState = {
@@ -7,7 +8,7 @@ type CartState = {
 };
 
 const initialState: CartState = {
-  items: [],
+  items: readGuestCartItems(),
 };
 
 const cartSlice = createSlice({

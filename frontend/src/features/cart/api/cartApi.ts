@@ -52,6 +52,7 @@ const toCartItem = (item: BackendCartItem): CartItem => ({
   name: item.name,
   price: item.price,
   quantity: item.qty,
+  image: item.image,
 });
 
 const toCart = (cart: BackendCart): Cart => ({

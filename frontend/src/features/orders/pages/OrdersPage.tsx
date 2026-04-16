@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 import { useMyOrdersQuery } from '../api/ordersApi';
 
 export const OrdersPage = () => {
@@ -32,6 +34,14 @@ export const OrdersPage = () => {
                   <p className="text-slate-600">
                     Placed: {new Date(order.createdAt).toLocaleString()}
                   </p>
+                  <div className="mt-2">
+                    <Link
+                      to={`/account/orders/${order._id}`}
+                      className="text-sm font-semibold text-primary hover:underline"
+                    >
+                      View details
+                    </Link>
+                  </div>
                 </div>
               </article>
             ))

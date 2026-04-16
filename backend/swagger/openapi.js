@@ -115,6 +115,33 @@ module.exports = {
           attributes: { type: 'object', additionalProperties: true },
           averageRating: { type: 'number' },
           numReviews: { type: 'number' },
+          sku: { type: 'string', nullable: true },
+          warranty: { type: 'string', nullable: true },
+          highlights: { type: 'array', items: { type: 'string' } },
+          specifications: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                label: { type: 'string' },
+                value: { type: 'string' },
+              },
+            },
+          },
+          colors: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                name: { type: 'string' },
+                hex: { type: 'string', nullable: true },
+              },
+            },
+          },
+          sizes: { type: 'array', items: { type: 'string' } },
+          shippingReturns: { type: 'string', nullable: true },
+          isFeatured: { type: 'boolean' },
+          isTrending: { type: 'boolean' },
         },
       },
       Category: {
@@ -427,6 +454,15 @@ module.exports = {
           { name: 'maxPrice', in: 'query', required: false, schema: { type: 'number' } },
           { name: 'brand', in: 'query', required: false, schema: { type: 'string' } },
           {
+            name: 'sort',
+            in: 'query',
+            required: false,
+            schema: { type: 'string', enum: ['newest', 'price-asc', 'price-desc', 'name-asc', 'name-desc'] },
+            description: 'Sort order for products. Defaults to newest.',
+          },
+          { name: 'featured', in: 'query', required: false, schema: { type: 'boolean' } },
+          { name: 'trending', in: 'query', required: false, schema: { type: 'boolean' } },
+          {
             name: 'attrs',
             in: 'query',
             required: false,
@@ -479,6 +515,8 @@ module.exports = {
                   categoryId: { type: 'string' },
                   stock: { type: 'number' },
                   countInStock: { type: 'number' },
+                  isFeatured: { type: 'boolean' },
+                  isTrending: { type: 'boolean' },
                   brand: { type: 'string', nullable: true },
                   attributes: { type: 'object', additionalProperties: true },
                 },
@@ -490,6 +528,45 @@ module.exports = {
           '201': { description: 'Created', content: { 'application/json': { schema: { $ref: '#/components/schemas/Product' } } } },
           '401': { $ref: '#/components/responses/Unauthorized' },
           '403': { $ref: '#/components/responses/Forbidden' },
+        },
+      },
+    },
+
+    '/api/products/home': {
+      get: {
+        tags: ['Products'],
+        summary: 'Homepage rails (featured + trending) in one call',
+        operationId: 'getHomeProducts',
+        parameters: [
+          {
+            name: 'featuredLimit',
+            in: 'query',
+            required: false,
+            schema: { type: 'integer', minimum: 1, maximum: 24, default: 8 },
+          },
+          {
+            name: 'trendingLimit',
+            in: 'query',
+            required: false,
+            schema: { type: 'integer', minimum: 1, maximum: 24, default: 10 },
+          },
+        ],
+        responses: {
+          '200': {
+            description: 'Homepage product rails',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    featured: { type: 'array', items: { $ref: '#/components/schemas/Product' } },
+                    trending: { type: 'array', items: { $ref: '#/components/schemas/Product' } },
+                  },
+                  required: ['featured', 'trending'],
+                },
+              },
+            },
+          },
         },
       },
     },
@@ -531,6 +608,8 @@ module.exports = {
                   categoryId: { type: 'string', nullable: true },
                   stock: { type: 'number' },
                   countInStock: { type: 'number' },
+                  isFeatured: { type: 'boolean' },
+                  isTrending: { type: 'boolean' },
                   brand: { type: 'string', nullable: true },
                   attributes: { type: 'object', additionalProperties: true },
                 },

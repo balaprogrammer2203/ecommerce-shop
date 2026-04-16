@@ -3,12 +3,14 @@ import { useRef } from 'react';
 import type { Product } from '../../../features/catalog/types';
 import { IconChevronLeft, IconChevronRight } from '../icons/storefront';
 import { ProductCard } from '../ProductCard';
+import { PageLoader } from '../system/Loader';
 
 type TrendingCarouselProps = {
   title?: string;
   products: Product[];
   onAddToCart: (productId: string) => void;
   addingProductId?: string | null;
+  isLoading?: boolean;
 };
 
 export const TrendingCarousel = ({
@@ -16,6 +18,7 @@ export const TrendingCarousel = ({
   products,
   onAddToCart,
   addingProductId,
+  isLoading = false,
 }: TrendingCarouselProps) => {
   const scrollerRef = useRef<HTMLDivElement>(null);
 
@@ -23,7 +26,7 @@ export const TrendingCarousel = ({
     scrollerRef.current?.scrollBy({ left: delta, behavior: 'smooth' });
   };
 
-  if (products.length === 0) {
+  if (!isLoading && products.length === 0) {
     return null;
   }
 
@@ -54,22 +57,29 @@ export const TrendingCarousel = ({
           </div>
         </div>
 
-        <div
-          ref={scrollerRef}
-          className="flex gap-4 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-color:rgba(148,163,184,0.9)_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300"
-          style={{ scrollSnapType: 'x mandatory' }}
-        >
-          {products.map((product) => (
-            <div key={product._id} className="w-[min(280px,85vw)] shrink-0 snap-start sm:w-[260px]">
-              <ProductCard
-                product={product}
-                variant="compact"
-                onAddToCart={() => onAddToCart(product._id)}
-                addToCartLoading={addingProductId === product._id}
-              />
-            </div>
-          ))}
-        </div>
+        {isLoading ? (
+          <PageLoader message="Loading trending products..." fullViewport={false} />
+        ) : (
+          <div
+            ref={scrollerRef}
+            className="flex gap-4 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-color:rgba(148,163,184,0.9)_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300"
+            style={{ scrollSnapType: 'x mandatory' }}
+          >
+            {products.map((product) => (
+              <div
+                key={product._id}
+                className="w-[min(280px,85vw)] shrink-0 snap-start sm:w-[260px]"
+              >
+                <ProductCard
+                  product={product}
+                  variant="compact"
+                  onAddToCart={() => onAddToCart(product._id)}
+                  addToCartLoading={addingProductId === product._id}
+                />
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

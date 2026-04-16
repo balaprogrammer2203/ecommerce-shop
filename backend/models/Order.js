@@ -45,7 +45,7 @@ const orderSchema = new mongoose.Schema(
     paymentMethod: {
       type: String,
       required: true,
-      enum: ['stripe', 'paypal', 'cod'],
+      enum: ['stripe', 'paypal', 'razorpay', 'cod'],
       trim: true,
     },
     itemsPrice: {
@@ -76,6 +76,24 @@ const orderSchema = new mongoose.Schema(
     },
     paidAt: {
       type: Date,
+    },
+    paymentResult: {
+      provider: { type: String },
+      sessionId: { type: String },
+      paymentIntentId: { type: String },
+      eventId: { type: String },
+    },
+    stripeSessionId: {
+      type: String,
+      index: true,
+    },
+    paypalOrderId: {
+      type: String,
+      index: true,
+    },
+    razorpayOrderId: {
+      type: String,
+      index: true,
     },
     isDelivered: {
       type: Boolean,

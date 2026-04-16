@@ -55,6 +55,50 @@ const parseAttributesFilter = (raw) => {
   return null;
 };
 
+const parseBool = (v) => {
+  if (v === true || v === 'true' || v === '1' || v === 1) return true;
+  if (v === false || v === 'false' || v === '0' || v === 0) return false;
+  return undefined;
+};
+
+const normalizeSpecRows = (rows) => {
+  if (!Array.isArray(rows)) return [];
+  return rows
+    .filter((r) => r && typeof r === 'object')
+    .map((r) => ({
+      label: String(r.label ?? '').trim().slice(0, 120),
+      value: String(r.value ?? '').trim().slice(0, 500),
+    }))
+    .filter((r) => r.label && r.value);
+};
+
+const normalizeColorOptions = (colors) => {
+  if (!Array.isArray(colors)) return [];
+  return colors
+    .filter((c) => c && typeof c === 'object')
+    .map((c) => ({
+      name: String(c.name ?? '').trim().slice(0, 80),
+      hex: c.hex != null ? String(c.hex).trim().slice(0, 7) : undefined,
+    }))
+    .filter((c) => c.name);
+};
+
+const resolveProductSort = (sort) => {
+  switch (String(sort || '').toLowerCase()) {
+    case 'price-asc':
+      return { price: 1, createdAt: -1 };
+    case 'price-desc':
+      return { price: -1, createdAt: -1 };
+    case 'name-asc':
+      return { title: 1, createdAt: -1 };
+    case 'name-desc':
+      return { title: -1, createdAt: -1 };
+    case 'newest':
+    default:
+      return { createdAt: -1 };
+  }
+};
+
 const buildProductFilter = async (query) => {
   const {
     keyword,
@@ -64,6 +108,8 @@ const buildProductFilter = async (query) => {
     minPrice,
     maxPrice,
     brand,
+    featured,
+    trending,
     attrs,
     attributes,
   } = query;
@@ -103,6 +149,16 @@ const buildProductFilter = async (query) => {
 
   if (brand) {
     and.push({ brand: new RegExp(escapeRegex(String(brand)), 'i') });
+  }
+
+  const featuredFlag = parseBool(featured);
+  if (featuredFlag !== undefined) {
+    and.push({ isFeatured: featuredFlag });
+  }
+
+  const trendingFlag = parseBool(trending);
+  if (trendingFlag !== undefined) {
+    and.push({ isTrending: trendingFlag });
   }
 
   const attrObj = parseAttributesFilter(attrs ?? attributes);
@@ -150,13 +206,14 @@ const applyCategoryToProduct = (product, categoryDoc) => {
 const getProducts = asyncHandler(async (req, res) => {
   const pageSize = Math.min(100, Math.max(1, Number(req.query.limit) || 20));
   const page = Math.max(1, Number(req.query.page) || 1);
+  const sort = resolveProductSort(req.query.sort);
 
   const filter = await buildProductFilter(req.query);
   const count = await Product.countDocuments(filter);
   const products = await Product.find(filter)
     .limit(pageSize)
     .skip(pageSize * (page - 1))
-    .sort({ createdAt: -1 });
+    .sort(sort);
 
   return res.json({
     products,
@@ -164,6 +221,24 @@ const getProducts = asyncHandler(async (req, res) => {
     pages: Math.ceil(count / pageSize) || 1,
     total: count,
   });
+});
+
+/**
+ * One-shot payload for homepage product rails.
+ * Query:
+ * - featuredLimit (default 8, max 24)
+ * - trendingLimit (default 10, max 24)
+ */
+const getHomeProducts = asyncHandler(async (req, res) => {
+  const featuredLimit = Math.min(24, Math.max(1, Number(req.query.featuredLimit) || 8));
+  const trendingLimit = Math.min(24, Math.max(1, Number(req.query.trendingLimit) || 10));
+
+  const [featured, trending] = await Promise.all([
+    Product.find({ isFeatured: true }).limit(featuredLimit).sort({ updatedAt: -1, createdAt: -1 }),
+    Product.find({ isTrending: true }).limit(trendingLimit).sort({ updatedAt: -1, createdAt: -1 }),
+  ]);
+
+  return res.json({ featured, trending });
 });
 
 const getProductById = asyncHandler(async (req, res) => {
@@ -207,7 +282,21 @@ const createProduct = asyncHandler(async (req, res) => {
     discountPrice: pricing.sale != null ? pricing.sale : undefined,
     brand: body.brand,
     stock,
+    isFeatured: body.isFeatured === true,
+    isTrending: body.isTrending === true,
     images,
+    sku: body.sku != null ? String(body.sku).trim().slice(0, 80) : undefined,
+    warranty: body.warranty != null ? String(body.warranty).trim().slice(0, 280) : undefined,
+    highlights: Array.isArray(body.highlights)
+      ? body.highlights.map((h) => String(h).trim()).filter(Boolean).slice(0, 12)
+      : [],
+    specifications: normalizeSpecRows(body.specifications),
+    colors: normalizeColorOptions(body.colors),
+    sizes: Array.isArray(body.sizes)
+      ? body.sizes.map((s) => String(s).trim()).filter(Boolean).slice(0, 24)
+      : [],
+    shippingReturns:
+      body.shippingReturns != null ? String(body.shippingReturns).trim().slice(0, 600) : undefined,
     attributes: body.attributes && typeof body.attributes === 'object' ? body.attributes : {},
   });
 
@@ -265,9 +354,41 @@ const updateProduct = asyncHandler(async (req, res) => {
   }
 
   if (body.brand !== undefined) product.brand = body.brand;
+  if (body.isFeatured !== undefined) product.isFeatured = body.isFeatured === true;
+  if (body.isTrending !== undefined) product.isTrending = body.isTrending === true;
 
   if (body.attributes !== undefined && typeof body.attributes === 'object') {
     product.attributes = body.attributes;
+  }
+
+  if (body.sku !== undefined) {
+    product.sku = body.sku === null || body.sku === '' ? undefined : String(body.sku).trim().slice(0, 80);
+  }
+  if (body.warranty !== undefined) {
+    product.warranty =
+      body.warranty === null || body.warranty === '' ? undefined : String(body.warranty).trim().slice(0, 280);
+  }
+  if (body.highlights !== undefined) {
+    product.highlights = Array.isArray(body.highlights)
+      ? body.highlights.map((h) => String(h).trim()).filter(Boolean).slice(0, 12)
+      : [];
+  }
+  if (body.specifications !== undefined) {
+    product.specifications = normalizeSpecRows(body.specifications);
+  }
+  if (body.colors !== undefined) {
+    product.colors = normalizeColorOptions(body.colors);
+  }
+  if (body.sizes !== undefined) {
+    product.sizes = Array.isArray(body.sizes)
+      ? body.sizes.map((s) => String(s).trim()).filter(Boolean).slice(0, 24)
+      : [];
+  }
+  if (body.shippingReturns !== undefined) {
+    product.shippingReturns =
+      body.shippingReturns === null || body.shippingReturns === ''
+        ? undefined
+        : String(body.shippingReturns).trim().slice(0, 600);
   }
 
   if (body.categoryId !== undefined || body.category !== undefined) {
@@ -301,6 +422,7 @@ const deleteProduct = asyncHandler(async (req, res) => {
 
 module.exports = {
   getProducts,
+  getHomeProducts,
   getProductById,
   createProduct,
   updateProduct,

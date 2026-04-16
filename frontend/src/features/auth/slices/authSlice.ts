@@ -10,7 +10,7 @@ type AuthState = {
 
 const initialState: AuthState = {
   user: null,
-  token: null,
+  token: authService.getToken(),
 };
 
 const authSlice = createSlice({
@@ -29,8 +29,11 @@ const authSlice = createSlice({
       state.token = null;
       authService.clearCredentials();
     },
+    setUserProfile: (state, action: PayloadAction<User>) => {
+      state.user = action.payload;
+    },
   },
 });
 
-export const { setCredentials, clearCredentials } = authSlice.actions;
+export const { setCredentials, clearCredentials, setUserProfile } = authSlice.actions;
 export const authReducer = authSlice.reducer;

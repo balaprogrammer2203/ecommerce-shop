@@ -34,6 +34,46 @@ const userSchema = new mongoose.Schema(
       type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],
       default: [],
     },
+    phone: {
+      type: String,
+      trim: true,
+      maxlength: 20,
+    },
+    dateOfBirth: {
+      type: Date,
+    },
+    address: {
+      line1: { type: String, trim: true, maxlength: 200, default: '' },
+      line2: { type: String, trim: true, maxlength: 200, default: '' },
+      city: { type: String, trim: true, maxlength: 100, default: '' },
+      state: { type: String, trim: true, maxlength: 100, default: '' },
+      postalCode: { type: String, trim: true, maxlength: 20, default: '' },
+      country: { type: String, trim: true, maxlength: 100, default: '' },
+    },
+    profileImageUrl: {
+      type: String,
+      trim: true,
+      maxlength: 5000,
+    },
+    lastLoginAt: {
+      type: Date,
+    },
+    twoFactorEnabled: {
+      type: Boolean,
+      default: false,
+    },
+    activeSessions: {
+      type: [
+        {
+          sessionId: { type: String, required: true, trim: true },
+          userAgent: { type: String, trim: true, default: '' },
+          ip: { type: String, trim: true, default: '' },
+          createdAt: { type: Date, default: Date.now },
+          lastSeenAt: { type: Date, default: Date.now },
+        },
+      ],
+      default: [],
+    },
   },
   {
     timestamps: true,

@@ -11,6 +11,16 @@ export type ProductCategorySnapshot = {
   name: string;
 };
 
+export type ProductSpecRow = {
+  label: string;
+  value: string;
+};
+
+export type ProductColorOption = {
+  name: string;
+  hex?: string;
+};
+
 export type Product = {
   _id: string;
   /** Canonical catalog title */
@@ -32,6 +42,14 @@ export type Product = {
   averageRating?: number;
   numReviews?: number;
   attributes?: Record<string, unknown>;
+  /** Merchant SKU (detail page) */
+  sku?: string;
+  warranty?: string;
+  highlights?: string[];
+  specifications?: ProductSpecRow[];
+  colors?: ProductColorOption[];
+  sizes?: string[];
+  shippingReturns?: string;
 };
 
 export type CatalogFilters = {
@@ -46,4 +64,9 @@ export type ProductListResponse = {
   page: number;
   pages: number;
   total: number;
+};
+
+export type HomeProductsResponse = {
+  featured: Product[];
+  trending: Product[];
 };

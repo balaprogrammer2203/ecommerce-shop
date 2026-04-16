@@ -16,6 +16,8 @@
     "jsonwebtoken": "*",
     "mongoose": "*",
     "morgan": "*",
+    "razorpay": "^2.9.6",
+    "stripe": "^22.0.1",
     "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {

@@ -5,6 +5,7 @@ import { adminReducer } from '../features/admin/slices/adminSlice';
 import { authApi } from '../features/auth/api/authApi';
 import { authReducer } from '../features/auth/slices/authSlice';
 import { cartApi } from '../features/cart/api/cartApi';
+import { saveGuestCartItems } from '../features/cart/lib/guestCartStorage';
 import { cartReducer } from '../features/cart/slices/cartSlice';
 import { catalogApi } from '../features/catalog/api/catalogApi';
 import { catalogReducer } from '../features/catalog/slices/catalogSlice';
@@ -43,6 +44,17 @@ export const store = configureStore({
 });
 
 setupListeners(store.dispatch);
+
+let previousGuestCartSnapshot = JSON.stringify(store.getState().cart.items);
+
+store.subscribe(() => {
+  const currentItems = store.getState().cart.items;
+  const currentSnapshot = JSON.stringify(currentItems);
+  if (currentSnapshot === previousGuestCartSnapshot) return;
+
+  previousGuestCartSnapshot = currentSnapshot;
+  saveGuestCartItems(currentItems);
+});
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;

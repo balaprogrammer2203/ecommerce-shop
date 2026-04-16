@@ -30,6 +30,34 @@ const protect = async (req, res, next) => {
       return next(new AppError('Not authorized, user not found', 401, 'UNAUTHORIZED'));
     }
 
+    const sessionId = typeof decoded.sid === 'string' ? decoded.sid : null;
+    if (sessionId) {
+      const now = new Date();
+      const existing = Array.isArray(req.user.activeSessions)
+        ? req.user.activeSessions.find((session) => session.sessionId === sessionId)
+        : null;
+      if (existing) {
+        existing.lastSeenAt = now;
+        existing.userAgent = req.get('user-agent') || existing.userAgent || '';
+        existing.ip = req.ip || existing.ip || '';
+      } else {
+        req.user.activeSessions = [
+          ...(req.user.activeSessions || []),
+          {
+            sessionId,
+            userAgent: req.get('user-agent') || '',
+            ip: req.ip || '',
+            createdAt: now,
+            lastSeenAt: now,
+          },
+        ];
+      }
+      if (req.user.activeSessions.length > 5) {
+        req.user.activeSessions = req.user.activeSessions.slice(-5);
+      }
+      await req.user.save();
+    }
+
     return next();
   } catch (error) {
     return next(new AppError('Not authorized, token failed', 401, 'UNAUTHORIZED'));

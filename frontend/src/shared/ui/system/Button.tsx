@@ -12,6 +12,9 @@ export type ShopButtonProps = Omit<
   shopVariant?: ShopButtonVariant;
   loading?: boolean;
   to?: string;
+  /** Passed through when `to` is set (React Router `<Link />`). */
+  state?: object;
+  replace?: boolean;
   type?: 'button' | 'submit' | 'reset';
   disabled?: boolean;
   fullWidth?: boolean;
@@ -57,6 +60,8 @@ export const Button = forwardRef<HTMLButtonElement & HTMLAnchorElement, ShopButt
       startIcon,
       className,
       to,
+      state,
+      replace,
       fullWidth,
       size = 'medium',
       type = 'button',
@@ -86,6 +91,8 @@ export const Button = forwardRef<HTMLButtonElement & HTMLAnchorElement, ShopButt
         <Link
           ref={ref as React.Ref<HTMLAnchorElement>}
           to={to}
+          state={state}
+          replace={replace}
           className={cn(cls, blocked && 'pointer-events-none opacity-50')}
           aria-disabled={blocked}
           tabIndex={blocked ? -1 : undefined}

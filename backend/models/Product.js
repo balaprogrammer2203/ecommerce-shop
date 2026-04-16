@@ -71,6 +71,18 @@ const productSchema = new mongoose.Schema(
       default: 0,
       index: true,
     },
+    /** Home-page merchandising flag */
+    isFeatured: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    /** Home-page trending rail flag */
+    isTrending: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
     averageRating: {
       type: Number,
       default: 0,
@@ -107,6 +119,56 @@ const productSchema = new mongoose.Schema(
     images: {
       type: [{ type: String, trim: true, maxlength: 2048 }],
       default: [],
+    },
+    /** Merchant SKU (optional, shown on PDP) */
+    sku: {
+      type: String,
+      trim: true,
+      maxlength: 80,
+      sparse: true,
+      index: true,
+    },
+    /** Short warranty / support line for PDP */
+    warranty: {
+      type: String,
+      trim: true,
+      maxlength: 280,
+    },
+    /** Bullet highlights for product detail */
+    highlights: {
+      type: [{ type: String, trim: true, maxlength: 220 }],
+      default: [],
+    },
+    /** Structured specifications table (label + value) */
+    specifications: {
+      type: [
+        {
+          label: { type: String, trim: true, maxlength: 120 },
+          value: { type: String, trim: true, maxlength: 500 },
+        },
+      ],
+      default: [],
+    },
+    /** Selectable colors (name + optional swatch hex) */
+    colors: {
+      type: [
+        {
+          name: { type: String, trim: true, maxlength: 80 },
+          hex: { type: String, trim: true, maxlength: 7 },
+        },
+      ],
+      default: [],
+    },
+    /** Selectable sizes / capacities */
+    sizes: {
+      type: [{ type: String, trim: true, maxlength: 40 }],
+      default: [],
+    },
+    /** PDP shipping / returns summary */
+    shippingReturns: {
+      type: String,
+      trim: true,
+      maxlength: 600,
     },
     /** Dynamic specs — filter keys should align with CategoryAttribute.key */
     attributes: {
