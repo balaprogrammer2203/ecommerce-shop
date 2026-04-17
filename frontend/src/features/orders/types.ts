@@ -19,6 +19,69 @@ export type Order = {
     country: string;
   };
   paymentMethod?: string;
+  paymentResult?: {
+    provider?: string;
+    sessionId?: string;
+    paymentIntentId?: string;
+    eventId?: string;
+  };
+  stripeSessionId?: string;
+  paypalOrderId?: string;
+  razorpayOrderId?: string;
+  delivery?: {
+    currentStatus?:
+      | 'order_placed'
+      | 'payment_pending'
+      | 'payment_confirmed'
+      | 'payment_failed'
+      | 'processing'
+      | 'packed'
+      | 'ready_to_ship'
+      | 'shipped'
+      | 'in_transit'
+      | 'out_for_delivery'
+      | 'delivered'
+      | 'delivery_attempt_failed'
+      | 'delivery_rescheduled'
+      | 'delivery_exception'
+      | 'cancelled'
+      | 'return_requested'
+      | 'return_approved'
+      | 'return_pickup_scheduled'
+      | 'return_picked_up'
+      | 'return_in_transit'
+      | 'return_received'
+      | 'return_rejected'
+      | 'refund_initiated'
+      | 'refund_completed'
+      // legacy
+      | 'pending'
+      | 'delivery_failed'
+      | 'rescheduled'
+      | 'return_initiated'
+      | 'refunded';
+    subStatus?: string;
+    courierDetails?: {
+      partner?: string;
+      trackingId?: string;
+      trackingUrl?: string;
+      estimatedDeliveryAt?: string;
+    };
+    trackingLogs?: Array<{
+      timestamp?: string;
+      status: string;
+      subStatus?: string;
+      description?: string;
+      actor?: 'system' | 'admin' | 'courier';
+    }>;
+    deliveryAttempts?: Array<{
+      attemptedAt?: string;
+      outcome: string;
+      notes?: string;
+    }>;
+    returnRequested?: boolean;
+    refundRequested?: boolean;
+  };
   itemsPrice?: number;
   taxPrice?: number;
   shippingPrice?: number;
@@ -28,6 +91,7 @@ export type Order = {
   isDelivered: boolean;
   deliveredAt?: string;
   createdAt: string;
+  updatedAt?: string;
 };
 
 export type CreateOrderPayload = {

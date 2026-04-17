@@ -4,6 +4,7 @@ import { AccountProfilePage } from '../features/account/pages/AccountProfilePage
 import { AdminCategoriesPage } from '../features/admin/pages/AdminCategoriesPage';
 import { AdminCategoryAttributesPage } from '../features/admin/pages/AdminCategoryAttributesPage';
 import { AdminDashboardPage } from '../features/admin/pages/AdminDashboardPage';
+import { AdminOrderDetailPage } from '../features/admin/pages/AdminOrderDetailPage';
 import { AdminOrdersPage } from '../features/admin/pages/AdminOrdersPage';
 import { AdminProductsPage } from '../features/admin/pages/AdminProductsPage';
 import { AdminUsersPage } from '../features/admin/pages/AdminUsersPage';
@@ -21,6 +22,8 @@ import { WishlistPage } from '../features/wishlist/pages/WishlistPage';
 import { AccountLayout } from '../shared/layouts/AccountLayout';
 import { AdminLayout } from '../shared/layouts/AdminLayout';
 import { PublicLayout } from '../shared/layouts/PublicLayout';
+import { NotFoundPage } from '../shared/ui/system/NotFoundPage';
+import { RouteErrorBoundary } from '../shared/ui/system/RouteErrorBoundary';
 
 /**
  * Application route tree. Keep route definitions here (composition root);
@@ -30,6 +33,7 @@ export const appRouter = createBrowserRouter([
   {
     path: '/',
     element: <PublicLayout />,
+    errorElement: <RouteErrorBoundary />,
     children: [
       { index: true, element: <HomePage /> },
       { path: 'category/:slug', element: <CategoryPage /> },
@@ -62,6 +66,7 @@ export const appRouter = createBrowserRouter([
         <AccountLayout />
       </AuthGuard>
     ),
+    errorElement: <RouteErrorBoundary />,
     children: [
       { index: true, element: <AccountProfilePage /> },
       { path: 'orders', element: <OrdersPage /> },
@@ -75,13 +80,19 @@ export const appRouter = createBrowserRouter([
         <AdminLayout />
       </AuthGuard>
     ),
+    errorElement: <RouteErrorBoundary />,
     children: [
       { index: true, element: <AdminDashboardPage /> },
       { path: 'products', element: <AdminProductsPage /> },
       { path: 'categories', element: <AdminCategoriesPage /> },
       { path: 'category-attributes', element: <AdminCategoryAttributesPage /> },
       { path: 'orders', element: <AdminOrdersPage /> },
+      { path: 'orders/:orderId', element: <AdminOrderDetailPage /> },
       { path: 'users', element: <AdminUsersPage /> },
     ],
+  },
+  {
+    path: '*',
+    element: <NotFoundPage />,
   },
 ]);

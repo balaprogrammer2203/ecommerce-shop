@@ -18,6 +18,11 @@ export type AdminProductsQueryParams = {
   sort?: 'newest' | 'price-asc' | 'price-desc' | 'name-asc' | 'name-desc';
 };
 
+export type AdminOrdersQueryParams = {
+  sortBy?: 'order' | 'customer' | 'product' | 'status' | 'date' | 'trend' | 'amount';
+  sortOrder?: 'asc' | 'desc';
+};
+
 export const adminApi = createApi({
   reducerPath: 'adminApi',
   baseQuery,
@@ -168,24 +173,128 @@ export const adminApi = createApi({
       }),
       invalidatesTags: [{ type: 'AdminCategoryAttributes', id: 'LIST' }],
     }),
-    adminOrders: builder.query<Order[], void>({
-      query: () => ({ url: '/orders' }),
+    adminOrders: builder.query<Order[], AdminOrdersQueryParams | void>({
+      query: (params) => ({
+        url: '/orders',
+        params: {
+          sortBy: params?.sortBy,
+          sortOrder: params?.sortOrder,
+        },
+      }),
       providesTags: [{ type: 'AdminOrders', id: 'LIST' }],
     }),
     adminOrderById: builder.query<Order, string>({
       query: (id) => ({ url: `/orders/${id}` }),
     }),
-    markOrderDelivered: builder.mutation<Order, string>({
-      query: (orderId) => ({
-        url: `/orders/${orderId}/deliver`,
-        method: 'PUT',
-      }),
-      invalidatesTags: [{ type: 'AdminOrders', id: 'LIST' }],
-    }),
     markOrderPaid: builder.mutation<Order, string>({
       query: (orderId) => ({
         url: `/orders/${orderId}/pay`,
         method: 'PUT',
+      }),
+      invalidatesTags: [{ type: 'AdminOrders', id: 'LIST' }],
+    }),
+    updateAdminOrder: builder.mutation<
+      Order,
+      {
+        id: string;
+        payload: {
+          paymentMethod?: 'stripe' | 'paypal' | 'razorpay' | 'cod';
+          shippingAddress?: {
+            address: string;
+            city: string;
+            postalCode: string;
+            country: string;
+          };
+        };
+      }
+    >({
+      query: ({ id, payload }) => ({
+        url: `/orders/${id}`,
+        method: 'PUT',
+        body: payload,
+      }),
+      invalidatesTags: [{ type: 'AdminOrders', id: 'LIST' }],
+    }),
+    updateAdminOrderDelivery: builder.mutation<
+      Order,
+      {
+        id: string;
+        payload: {
+          action:
+            | 'update_tracking'
+            | 'set_status'
+            | 'mark_delivery_failed'
+            | 'reschedule'
+            | 'cancel_delivery'
+            | 'trigger_return'
+            | 'trigger_refund';
+          payload?: {
+            nextStatus?:
+              | 'order_placed'
+              | 'payment_pending'
+              | 'payment_confirmed'
+              | 'payment_failed'
+              | 'processing'
+              | 'packed'
+              | 'ready_to_ship'
+              | 'shipped'
+              | 'in_transit'
+              | 'out_for_delivery'
+              | 'delivered'
+              | 'delivery_attempt_failed'
+              | 'delivery_rescheduled'
+              | 'delivery_exception'
+              | 'cancelled'
+              | 'return_requested'
+              | 'return_approved'
+              | 'return_pickup_scheduled'
+              | 'return_picked_up'
+              | 'return_in_transit'
+              | 'return_received'
+              | 'return_rejected'
+              | 'refund_initiated'
+              | 'refund_completed'
+              // legacy compatibility
+              | 'pending'
+              | 'delivery_failed'
+              | 'rescheduled'
+              | 'return_initiated'
+              | 'refunded';
+            subStatus?: string;
+            description?: string;
+            actor?: 'admin' | 'system' | 'courier';
+            courierDetails?: {
+              partner?: string;
+              trackingId?: string;
+              trackingUrl?: string;
+              estimatedDeliveryAt?: string;
+            };
+          };
+        };
+      }
+    >({
+      query: ({ id, payload }) => ({
+        url: `/orders/${id}/delivery`,
+        method: 'PUT',
+        body: payload,
+      }),
+      invalidatesTags: [{ type: 'AdminOrders', id: 'LIST' }],
+    }),
+    deleteAdminOrder: builder.mutation<{ message: string }, string>({
+      query: (orderId) => ({
+        url: `/orders/${orderId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: [{ type: 'AdminOrders', id: 'LIST' }],
+    }),
+    deleteAdminOrdersBulk: builder.mutation<
+      { message: string; deletedCount: number },
+      { orderIds: string[] }
+    >({
+      query: (payload) => ({
+        url: '/orders',
+        method: 'DELETE',
+        body: payload,
       }),
       invalidatesTags: [{ type: 'AdminOrders', id: 'LIST' }],
     }),
@@ -233,8 +342,11 @@ export const {
   useDeleteAdminCategoryAttributeMutation,
   useAdminOrdersQuery,
   useAdminOrderByIdQuery,
-  useMarkOrderDeliveredMutation,
   useMarkOrderPaidMutation,
+  useUpdateAdminOrderMutation,
+  useUpdateAdminOrderDeliveryMutation,
+  useDeleteAdminOrderMutation,
+  useDeleteAdminOrdersBulkMutation,
   useAdminUsersQuery,
   useUpdateAdminUserMutation,
   useDeleteAdminUserMutation,

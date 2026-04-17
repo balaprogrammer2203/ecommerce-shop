@@ -28,6 +28,26 @@ const orderItemSchema = new mongoose.Schema(
   { _id: false }
 );
 
+const deliveryTrackingLogSchema = new mongoose.Schema(
+  {
+    timestamp: { type: Date, default: Date.now },
+    status: { type: String, required: true, trim: true },
+    subStatus: { type: String, trim: true },
+    description: { type: String, trim: true },
+    actor: { type: String, enum: ['system', 'admin', 'courier'], default: 'system' },
+  },
+  { _id: false }
+);
+
+const deliveryAttemptSchema = new mongoose.Schema(
+  {
+    attemptedAt: { type: Date, default: Date.now },
+    outcome: { type: String, required: true, trim: true },
+    notes: { type: String, trim: true },
+  },
+  { _id: false }
+);
+
 const orderSchema = new mongoose.Schema(
   {
     user: {
@@ -101,6 +121,55 @@ const orderSchema = new mongoose.Schema(
     },
     deliveredAt: {
       type: Date,
+    },
+    delivery: {
+      currentStatus: {
+        type: String,
+        enum: [
+          'order_placed',
+          'payment_pending',
+          'payment_confirmed',
+          'payment_failed',
+          'processing',
+          'packed',
+          'ready_to_ship',
+          'shipped',
+          'in_transit',
+          'out_for_delivery',
+          'delivered',
+          'delivery_attempt_failed',
+          'delivery_rescheduled',
+          'delivery_exception',
+          'cancelled',
+          'return_requested',
+          'return_approved',
+          'return_pickup_scheduled',
+          'return_picked_up',
+          'return_in_transit',
+          'return_received',
+          'return_rejected',
+          'refund_initiated',
+          'refund_completed',
+          // Legacy statuses kept for backward compatibility with existing data
+          'pending',
+          'delivery_failed',
+          'rescheduled',
+          'return_initiated',
+          'refunded',
+        ],
+        default: 'order_placed',
+      },
+      subStatus: { type: String, trim: true },
+      courierDetails: {
+        partner: { type: String, trim: true },
+        trackingId: { type: String, trim: true },
+        trackingUrl: { type: String, trim: true },
+        estimatedDeliveryAt: { type: Date },
+      },
+      trackingLogs: { type: [deliveryTrackingLogSchema], default: [] },
+      deliveryAttempts: { type: [deliveryAttemptSchema], default: [] },
+      returnRequested: { type: Boolean, default: false },
+      refundRequested: { type: Boolean, default: false },
     },
   },
   {

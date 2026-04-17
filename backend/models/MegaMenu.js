@@ -39,6 +39,4 @@ const megaMenuSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-megaMenuSchema.index({ key: 1 });
-
 module.exports = mongoose.model('MegaMenu', megaMenuSchema);
