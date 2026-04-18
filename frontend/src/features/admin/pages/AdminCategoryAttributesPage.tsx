@@ -22,6 +22,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 
 import {
   useAdminCategoriesQuery,
@@ -43,14 +44,21 @@ const parseValues = (raw: string) =>
     .slice(0, 100);
 
 export const AdminCategoryAttributesPage = () => {
+  const [searchParams] = useSearchParams();
+  const categoryIdFromUrl = searchParams.get('categoryId');
+
   const { data: categories = [], isLoading: loadingCategories } = useAdminCategoriesQuery({
     active: 'true',
   });
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
 
   useEffect(() => {
+    if (categoryIdFromUrl && categories.some((c) => c._id === categoryIdFromUrl)) {
+      setSelectedCategoryId(categoryIdFromUrl);
+      return;
+    }
     if (!selectedCategoryId && categories.length) setSelectedCategoryId(categories[0]._id);
-  }, [categories, selectedCategoryId]);
+  }, [categories, selectedCategoryId, categoryIdFromUrl]);
 
   const {
     data: attributes = [],

@@ -55,6 +55,10 @@ export const adminApi = createApi({
       },
       providesTags: [{ type: 'AdminProducts', id: 'LIST' }],
     }),
+    adminProductById: builder.query<Product, string>({
+      query: (id) => ({ url: `/products/${id}` }),
+      providesTags: (_result, _err, id) => [{ type: 'AdminProducts', id }],
+    }),
     createAdminProduct: builder.mutation<Product, AdminProductInput>({
       query: (payload) => ({
         url: '/products',
@@ -72,14 +76,20 @@ export const adminApi = createApi({
         method: 'PUT',
         body: payload,
       }),
-      invalidatesTags: [{ type: 'AdminProducts', id: 'LIST' }],
+      invalidatesTags: (_r, _e, { id }) => [
+        { type: 'AdminProducts', id: 'LIST' },
+        { type: 'AdminProducts', id },
+      ],
     }),
     deleteAdminProduct: builder.mutation<{ message: string }, string>({
       query: (id) => ({
         url: `/products/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: [{ type: 'AdminProducts', id: 'LIST' }],
+      invalidatesTags: (_r, _e, id) => [
+        { type: 'AdminProducts', id: 'LIST' },
+        { type: 'AdminProducts', id },
+      ],
     }),
     adminCategories: builder.query<AdminCategory[], { active?: 'all' | 'true' | 'false' } | void>({
       query: (params) => ({
@@ -87,6 +97,10 @@ export const adminApi = createApi({
         params: { active: params?.active ?? 'all' },
       }),
       providesTags: [{ type: 'AdminCategories', id: 'LIST' }],
+    }),
+    adminCategoryById: builder.query<AdminCategory, string>({
+      query: (id) => ({ url: `/categories/${id}` }),
+      providesTags: (_result, _err, id) => [{ type: 'AdminCategories', id }],
     }),
     createAdminCategory: builder.mutation<
       AdminCategory,
@@ -118,14 +132,20 @@ export const adminApi = createApi({
         method: 'PUT',
         body: payload,
       }),
-      invalidatesTags: [{ type: 'AdminCategories', id: 'LIST' }],
+      invalidatesTags: (_r, _e, { id }) => [
+        { type: 'AdminCategories', id: 'LIST' },
+        { type: 'AdminCategories', id },
+      ],
     }),
     deleteAdminCategory: builder.mutation<{ message: string }, string>({
       query: (id) => ({
         url: `/categories/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: [{ type: 'AdminCategories', id: 'LIST' }],
+      invalidatesTags: (_r, _e, id) => [
+        { type: 'AdminCategories', id: 'LIST' },
+        { type: 'AdminCategories', id },
+      ],
     }),
     adminCategoryAttributes: builder.query<AdminCategoryAttribute[], { categoryId: string }>({
       query: (params) => ({
@@ -302,20 +322,30 @@ export const adminApi = createApi({
       query: () => ({ url: '/admin/users' }),
       providesTags: [{ type: 'AdminUsers', id: 'LIST' }],
     }),
+    adminUserById: builder.query<AdminUser, string>({
+      query: (id) => ({ url: `/admin/users/${id}` }),
+      providesTags: (_result, _err, id) => [{ type: 'AdminUsers', id }],
+    }),
     updateAdminUser: builder.mutation<AdminUser, { id: string; payload: Partial<AdminUser> }>({
       query: ({ id, payload }) => ({
         url: `/admin/users/${id}`,
         method: 'PUT',
         body: payload,
       }),
-      invalidatesTags: [{ type: 'AdminUsers', id: 'LIST' }],
+      invalidatesTags: (_r, _e, { id }) => [
+        { type: 'AdminUsers', id: 'LIST' },
+        { type: 'AdminUsers', id },
+      ],
     }),
     deleteAdminUser: builder.mutation<{ message: string }, string>({
       query: (id) => ({
         url: `/admin/users/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: [{ type: 'AdminUsers', id: 'LIST' }],
+      invalidatesTags: (_r, _e, id) => [
+        { type: 'AdminUsers', id: 'LIST' },
+        { type: 'AdminUsers', id },
+      ],
     }),
     uploadAdminProductImage: builder.mutation<{ imageUrl: string }, { imageBase64: string }>({
       query: (payload) => ({
@@ -329,10 +359,12 @@ export const adminApi = createApi({
 
 export const {
   useAdminProductsQuery,
+  useAdminProductByIdQuery,
   useCreateAdminProductMutation,
   useUpdateAdminProductMutation,
   useDeleteAdminProductMutation,
   useAdminCategoriesQuery,
+  useAdminCategoryByIdQuery,
   useCreateAdminCategoryMutation,
   useUpdateAdminCategoryMutation,
   useDeleteAdminCategoryMutation,
@@ -348,6 +380,7 @@ export const {
   useDeleteAdminOrderMutation,
   useDeleteAdminOrdersBulkMutation,
   useAdminUsersQuery,
+  useAdminUserByIdQuery,
   useUpdateAdminUserMutation,
   useDeleteAdminUserMutation,
   useUploadAdminProductImageMutation,

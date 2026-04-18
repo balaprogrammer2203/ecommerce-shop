@@ -1,5 +1,14 @@
 import { Product } from '../catalog/types';
 
+export type AdminUserAddress = {
+  line1?: string;
+  line2?: string;
+  city?: string;
+  state?: string;
+  postalCode?: string;
+  country?: string;
+};
+
 export type AdminUser = {
   _id: string;
   name: string;
@@ -8,6 +17,8 @@ export type AdminUser = {
   phone?: string;
   dateOfBirth?: string | null;
   profileImageUrl?: string;
+  address?: AdminUserAddress;
+  lastLoginAt?: string | null;
   twoFactorEnabled?: boolean;
   activeSessionsCount?: number;
   createdAt?: string;

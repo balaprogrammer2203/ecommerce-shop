@@ -3,10 +3,13 @@ import { createBrowserRouter } from 'react-router-dom';
 import { AccountProfilePage } from '../features/account/pages/AccountProfilePage';
 import { AdminCategoriesPage } from '../features/admin/pages/AdminCategoriesPage';
 import { AdminCategoryAttributesPage } from '../features/admin/pages/AdminCategoryAttributesPage';
+import { AdminCategoryDetailPage } from '../features/admin/pages/AdminCategoryDetailPage';
 import { AdminDashboardPage } from '../features/admin/pages/AdminDashboardPage';
 import { AdminOrderDetailPage } from '../features/admin/pages/AdminOrderDetailPage';
 import { AdminOrdersPage } from '../features/admin/pages/AdminOrdersPage';
+import { AdminProductDetailPage } from '../features/admin/pages/AdminProductDetailPage';
 import { AdminProductsPage } from '../features/admin/pages/AdminProductsPage';
+import { AdminUserDetailPage } from '../features/admin/pages/AdminUserDetailPage';
 import { AdminUsersPage } from '../features/admin/pages/AdminUsersPage';
 import { AuthGuard } from '../features/auth/components/AuthGuard';
 import { LoginPage } from '../features/auth/pages/LoginPage';
@@ -83,11 +86,14 @@ export const appRouter = createBrowserRouter([
     errorElement: <RouteErrorBoundary />,
     children: [
       { index: true, element: <AdminDashboardPage /> },
+      { path: 'products/:productId', element: <AdminProductDetailPage /> },
       { path: 'products', element: <AdminProductsPage /> },
+      { path: 'categories/:categoryId', element: <AdminCategoryDetailPage /> },
       { path: 'categories', element: <AdminCategoriesPage /> },
       { path: 'category-attributes', element: <AdminCategoryAttributesPage /> },
       { path: 'orders', element: <AdminOrdersPage /> },
       { path: 'orders/:orderId', element: <AdminOrderDetailPage /> },
+      { path: 'users/:userId', element: <AdminUserDetailPage /> },
       { path: 'users', element: <AdminUsersPage /> },
     ],
   },

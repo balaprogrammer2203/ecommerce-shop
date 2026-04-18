@@ -56,7 +56,7 @@ export const AdminLayout = () => {
       {
         label: 'User',
         to: '/admin/users',
-        end: true,
+        end: false,
         icon: <PersonOutlineRoundedIcon sx={{ fontSize: 18 }} />,
       },
       {

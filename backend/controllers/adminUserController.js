@@ -22,6 +22,12 @@ const getAdminUsers = asyncHandler(async (_req, res) => {
   return res.json(users.map(mapUser));
 });
 
+const getAdminUserById = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.params.id);
+  if (!user) throw new AppError('User not found', 404, 'USER_NOT_FOUND');
+  return res.json(mapUser(user));
+});
+
 const updateAdminUser = asyncHandler(async (req, res) => {
   const user = await User.findById(req.params.id);
   if (!user) throw new AppError('User not found', 404, 'USER_NOT_FOUND');
@@ -51,6 +57,7 @@ const deleteAdminUser = asyncHandler(async (req, res) => {
 
 module.exports = {
   getAdminUsers,
+  getAdminUserById,
   updateAdminUser,
   deleteAdminUser,
 };
